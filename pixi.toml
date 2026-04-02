@@ -1,0 +1,9 @@
+[project]
+name = "cascadia-wx"
+version = "1.0.0"
+description = "PNW Mountain Weather Analysis - FORTRAN"
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-arm64"]
+
+[dependencies]
+python = ">=3.12"
