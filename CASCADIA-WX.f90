@@ -360,11 +360,9 @@ PROGRAM CASCADIA_WX
     'swe_in,swe_pct,tmax_c,tmin_c,tavg_c,'// &
     'snow_level_ft,snow_frac,melt_index,date'
   DO i = 1, n_snotel
-    WRITE(U_CSV,'(A,A,A,A,A,F6.0,A,F6.2,A,F6.1,A,F6.1,A,F6.1,A,'// &
-                'F6.1,A,F6.1,A,F6.1,A,F6.1,A,F6.3,A,F6.2,A,A,A)') &
-      TRIM(snotel_id(i)), ',', &
-      '"', TRIM(snotel_name(i)), '",', &
-      TRIM(snotel_massif(i)), ',', &
+    WRITE(U_CSV, *) TRIM(snotel_id(i))//','// &
+      '"'//TRIM(snotel_name(i))//'",'// &
+      TRIM(snotel_massif(i))//',', &
       snotel_elev_ft(i), ',', &
       snotel_swe(i), ',', &
       snotel_swe_pct(i), ',', &

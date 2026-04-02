@@ -1,0 +1,67 @@
+====================================================================================================
+
+              CASCADIA-WX  //  PACIFIC NORTHWEST MOUNTAIN WEATHER ANALYSIS
+                     RAINIER  ·  OLYMPICS  ·  CASCADES
+
+                          PROCESSING DATE: 2026-04-02
+
+====================================================================================================
+
+SECTION I: SNOTEL STATION ANALYSIS
+
+  STATION                            MASSIF     ELEV(FT)  SWE(IN)  %NORM  TMAX-C  TMIN-C  TAVG-C  SNOLVL(FT)  PHASE    MELT-IDX
+----------------------------------------------------------------------------------------------------
+  Paradise (Rainier)              RAINIER      5427.   62.40  124.1     2.2    -2.2     0.0       4506.  SNOW       0.00
+  Sunrise (Rainier)               RAINIER      6400.   74.10  118.0    -1.1    -5.6    -3.3       3943.  SNOW       0.00
+  Cayuse Pass                     RAINIER      3960.   38.20  130.8     4.4    -1.1     1.7       3806.  SNOW       1.67
+  Hurricane Ridge (Oly            OLYMPICS     5757.   58.70  109.1     1.1    -3.3    -1.1       4324.  SNOW       0.00
+  Waterhole (Olympics)            OLYMPICS     4200.   42.10   97.0     3.3    -2.2     0.6       3535.  SNOW       0.56
+  Snoqualmie Pass                 CASCADES     3000.   28.40  111.8     6.7     1.1     3.9       3870.  MIXED      3.89
+  Stevens Pass                    CASCADES     4061.   48.60  119.1     3.3    -2.2     0.6       3396.  SNOW       0.56
+  Stampede Pass                   CASCADES     3960.   44.20  108.1     4.4    -1.1     1.7       3806.  SNOW       1.67
+  White Pass                      CASCADES     4500.   56.80  121.9     2.2    -3.3    -0.6       3323.  SNOW       0.00
+  Crystal Mountain                CASCADES     4400.   52.30  114.9     2.8    -2.8     0.0       3479.  SNOW       0.00
+  Chinook Pass                    CASCADES     5432.   68.90  126.9     0.0    -4.4    -2.2       3487.  SNOW       0.00
+
+SECTION II: LAPSE RATE & PRECIPITATION PHASE ANALYSIS
+
+  ENVIRONMENTAL LAPSE RATE:   -7.12 C/km
+  DRY ADIABATIC LAPSE RATE:  -9.80 C/km
+  MOIST ADIABATIC LAPSE RATE: -6.50 C/km
+  REGIONAL MEAN SNOW LEVEL:    3770. ft
+
+  STATION                            ELEV(FT)  LPS(C/km)  SNOLVL(FT)  SNOW%   RAIN%   STABILITY
+----------------------------------------------------------------------------------------------------
+  Paradise (Rainier)                 5427.     -6.04       4506.    95.0     5.0    NEUTRAL     
+  Sunrise (Rainier)                  6400.     -6.89       3943.    95.0     5.0    COND UNSTBL 
+  Cayuse Pass                        3960.     -7.00       3806.    95.0     5.0    COND UNSTBL 
+  Hurricane Ridge (Oly               5757.     -6.35       4324.    95.0     5.0    NEUTRAL     
+  Waterhole (Olympics)               4200.     -7.52       3535.    95.0     5.0    COND UNSTBL 
+  Snoqualmie Pass                    3000.     -6.78       3870.    47.3    52.7    COND UNSTBL 
+  Stevens Pass                       4061.     -7.81       3396.    95.0     5.0    COND UNSTBL 
+  Stampede Pass                      3960.     -7.00       3806.    95.0     5.0    COND UNSTBL 
+  White Pass                         4500.     -7.86       3323.    95.0     5.0    COND UNSTBL 
+  Crystal Mountain                   4400.     -7.60       3479.    95.0     5.0    COND UNSTBL 
+  Chinook Pass                       5432.     -7.49       3487.    95.0     5.0    COND UNSTBL 
+
+SECTION III: MOUNTAIN MASSIF SNOWPACK SUMMARY
+
+  MASSIF        STATIONS  AVG SWE (IN)  AVG % NORMAL  STATUS
+------------------------------------------------------------
+  RAINIER            3         58.23         124.3  ABOVE NORMAL
+  OLYMPICS           2         50.40         103.1  NEAR NORMAL
+  CASCADES           6         49.87         117.1  ABOVE NORMAL
+
+SECTION IV: ATMOSPHERIC ANALYSIS
+
+  ATMOSPHERIC RIVER INDEX:       0.94
+  AR STATUS:                  WEAK AR SIGNATURE
+  STORM CLASSIFICATION:       CUTOFF LOW / OTHER
+  ENVIRONMENTAL LAPSE RATE:    -7.12 C/km
+  REGIONAL SNOW LEVEL:         3770. ft
+  REGIONAL SWE % NORMAL:       116.5%
+
+====================================================================================================
+  END OF REPORT  //   11 STATIONS PROCESSED
+  CASCADIA-WX  //  NORMAL TERMINATION.
+====================================================================================================
