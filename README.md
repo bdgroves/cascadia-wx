@@ -15,93 +15,180 @@
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
-> *"Numerical weather prediction is the use of mathematical models of the atmosphere to predict the weather. The first successful NWP run was performed in 1950 on the ENIAC — programmed in FORTRAN."*
-
 **[→ Launch the Live Dashboard](https://bdgroves.github.io/cascadia-wx)**
 
 ---
 
-## What It Is
-
-CASCADIA-WX is a FORTRAN scientific analysis engine for Pacific Northwest mountain weather. It reads live NRCS SNOTEL snowpack data from 11 stations across three mountain massifs, combines it with NOAA surface temperatures at valley airports, and computes atmospheric science metrics every morning at 8AM Pacific.
-
-The sister project to **[SIERRA-FLOW](https://github.com/bdgroves/sierra-flow-cobol)** — which does Sierra Nevada streamflow analysis in COBOL. Together: vintage languages, live government data, zero cloud costs.
+> *"We're going to go out there and put this machine right in the path of the storm."*
+> — Dr. Jo Harding, Twister (1996)
 
 ---
 
-## What FORTRAN Computes
+## The Setup
 
-| Computation | Description |
-|-------------|-------------|
-| **Environmental lapse rate** | Temperature gradient C/km from valley floor to mountain stations |
-| **Snow level** | Elevation where precipitation phase changes (rain → snow boundary) |
-| **Precipitation phase partitioning** | Snow % vs rain % at each station elevation |
-| **Degree day accumulation** | Heating/cooling/positive degree days — snowmelt energy budget |
-| **Atmospheric river index** | Proxy IVT score from snow level anomaly + SWE accumulation rate |
+It's early April. The Cascades are running dry — 15% of normal snowpack. Snoqualmie Pass is bare. Stevens is bare. Stampede is bare. Someone in a cabin somewhere in the foothills can feel it. The snowpack that should be sitting up there, waiting to melt slow into August, isn't there. The reservoirs will notice in July.
+
+Every morning at 8AM, a terminal somewhere wakes up. A Python script reaches out to 11 weather stations buried in the mountains — sensors at Paradise on Rainier, high ridges in the Olympics, fog-soaked Cascade passes. It pulls the numbers. It writes a CSV. Then FORTRAN takes over.
+
+Not a wrapper. Not a library. **FORTRAN.** The language that computed the first numerical weather forecast in 1950 on a machine that filled a room. The same mathematical DNA that still runs inside the National Weather Service, NCAR, ECMWF — every serious atmospheric model on the planet. It reads the data, cranks through the physics — lapse rates, snow levels, precipitation phase, atmospheric river index, storm classification — and prints a report.
+
+Then it terminates. Normally. Return code zero.
+
+Nobody asked for this. It just needed to happen.
+
+---
+
+## The Numbers
+
+```
+4, 8, 15, 16, 23, 42
+```
+
+Enter them every 108 minutes or the snowpack anomaly gets worse. We don't make the rules.
+
+```
+CASCADIA-WX: LOADING SNOTEL DATA...
+  STATION  1: Paradise
+  STATION  2: Cayuse Pass
+  STATION  3: Burnt Mountain
+  ...
+  STATION 11: Corral Pass
+CASCADIA-WX: 11 SNOTEL STATIONS LOADED
+CASCADIA-WX: COMPUTING LAPSE RATES...
+CASCADIA-WX: COMPUTING SNOW LEVELS...
+CASCADIA-WX: COMPUTING DEGREE DAYS...
+CASCADIA-WX: COMPUTING AR INDEX...
+CASCADIA-WX: WRITING REPORT...
+CASCADIA-WX: NORMAL TERMINATION.
+```
+
+Every day. Automated. Whether anyone's watching or not. The hatch has to be maintained.
+
+---
+
+## What It Computes
+
+FORTRAN does the atmospheric science. Not because it's convenient — because it's what the atmosphere deserves.
+
+| Computation | Physics |
+|-------------|---------|
+| **Environmental lapse rate** | Temperature gradient C/km, valley floor → mountain stations |
+| **Snow level** | Elevation where T = 2°C — the rain/snow phase boundary |
+| **Precipitation phase** | Snow % vs rain % at each station using transition zone logic |
+| **Degree days** | Heating / cooling / positive — the snowmelt energy budget |
+| **Atmospheric river index** | Proxy IVT score from snow level anomaly + SWE rate |
 | **Storm classification** | Gulf of Alaska / Pineapple Express / Cutoff Low |
 | **SWE percent of normal** | Current snowpack vs 30-year NRCS median |
-| **Massif roll-up** | Average SWE and snow level by Rainier / Olympics / Cascades |
-| **Atmospheric stability** | Unstable / Conditionally Unstable / Neutral / Stable |
+| **Massif roll-up** | Rainier / Olympics / Cascades averaged and classified |
+| **Atmospheric stability** | Unstable / Cond. Unstable / Neutral / Stable |
+
+---
+
+## April 2, 2026 — What the Numbers Said
+
+```
+SECTION III: MOUNTAIN MASSIF SNOWPACK SUMMARY
+
+  MASSIF        STATIONS  AVG SWE (IN)  AVG % NORMAL  STATUS
+  ------------------------------------------------------------
+  RAINIER            4         24.65          52.5  WELL BELOW NORMAL
+  OLYMPICS           2         13.90          33.2  WELL BELOW NORMAL
+  CASCADES           5          4.68          15.1  WELL BELOW NORMAL
+
+SECTION IV: ATMOSPHERIC ANALYSIS
+
+  ATMOSPHERIC RIVER INDEX:      -0.71
+  AR STATUS:                  NO AR CONDITIONS
+  STORM CLASSIFICATION:       GULF OF ALASKA
+  ENVIRONMENTAL LAPSE RATE:    -5.43 C/km
+  REGIONAL SNOW LEVEL:         2972. ft
+  REGIONAL SWE % NORMAL:        32.0%
+```
+
+Snoqualmie Pass: 0.0 inches. Stevens Pass: 0.0 inches. Stampede Pass: 0.0 inches.
+Paradise, sitting at 5,150 feet on the flank of Rainier, still holding 36.7 inches — 73% of normal.
+The mountain remembers what the passes have forgotten.
 
 ---
 
 ## The Eleven Stations
 
-| Station | Massif | Elevation |
-|---------|--------|-----------|
-| Paradise | Rainier | 5,427 ft |
-| Sunrise | Rainier | 6,400 ft |
-| Cayuse Pass | Rainier | 3,960 ft |
-| Hurricane Ridge | Olympics | 5,757 ft |
-| Waterhole | Olympics | 4,200 ft |
-| Snoqualmie Pass | Cascades | 3,000 ft |
-| Stevens Pass | Cascades | 4,061 ft |
-| Stampede Pass | Cascades | 3,960 ft |
-| White Pass | Cascades | 4,500 ft |
-| Crystal Mountain | Cascades | 4,400 ft |
-| Chinook Pass | Cascades | 5,432 ft |
+Three massifs. Eleven sensors. Each one a data point in a system that's been measuring snowpack since before most of the code running today was written.
+
+| Station | Massif | Elevation | What It Watches |
+|---------|--------|-----------|-----------------|
+| Paradise | Rainier | 5,150 ft | Heart of the Nisqually watershed |
+| Cayuse Pass | Rainier | 5,260 ft | White River headwaters |
+| Burnt Mountain | Rainier | 4,160 ft | Wilkeson Creek drainage |
+| Corral Pass | Rainier | 5,810 ft | Highest station — last to lose snow |
+| Dungeness | Olympics | 3,990 ft | Olympic Peninsula water supply |
+| Buckinghorse | Olympics | 4,850 ft | Elwha River headwaters |
+| Snoqualmie Pass | Cascades | 3,000 ft | I-90 corridor — first to go bare |
+| Stevens Pass | Cascades | 4,061 ft | US-2 corridor |
+| Stampede Pass | Cascades | 3,960 ft | Yakima River basin |
+| Elbow Lake | Cascades | 3,050 ft | South Fork Nooksack |
+| Bumping Ridge | Cascades | 4,600 ft | Bumping River / Yakima |
 
 ---
 
 ## The Pipeline
 
 ```
-NRCS AWDB API (SNOTEL)  +  NOAA Observations API
-              │
-              ▼
-        fetch_wx.py          Python 3.12 · stdlib only · zero pip
-        snotel_data.csv
-        valley_data.csv
-              │
-              ▼
-        CASCADIA-WX.f90      GFortran 13 · 700+ lines
-        reads both CSVs
-              │
-              ├── Lapse rate computation
-              ├── Snow level estimation
-              ├── Precipitation phase partitioning
-              ├── Degree day accumulation
-              ├── Atmospheric River index
-              ├── Storm classification
-              └── 4-section formatted report
-              │
-              ▼
-        cascadia-wx-report.txt   committed daily
-        analysis.csv             committed daily
-              │
-              ▼
-        index.html               reads analysis.csv live · no rebuild
+         ┌─────────────────────────────────────────┐
+         │         8:00 AM PACIFIC                  │
+         │         GitHub Actions wakes up          │
+         └───────────────────┬─────────────────────┘
+                             │
+                             ▼
+              NRCS SNOTEL API  +  NOAA Observations
+              (free · public · no key · been running
+               since before the internet existed)
+                             │
+                             ▼
+                      fetch_wx.py
+                  Python · zero dependencies
+                  stdlib only · no pip
+                             │
+                  snotel_data.csv  ←─── 11 stations
+                  valley_data.csv  ←─── 4 airports
+                             │
+                             ▼
+                    CASCADIA-WX.f90
+                  ┌──────────────────────────────┐
+                  │  FORTRAN · GFortran 13        │
+                  │  Lapse rate computation       │
+                  │  Snow level estimation        │
+                  │  Phase partitioning           │
+                  │  Degree day accumulation      │
+                  │  Atmospheric river index      │
+                  │  Storm classification         │
+                  │  Massif roll-up               │
+                  │  4-section formatted report   │
+                  └──────────────────────────────┘
+                             │
+               cascadia-wx-report.txt  (the printout)
+               analysis.csv            (the machine read)
+                             │
+                             ▼
+                    git commit + push
+                             │
+                             ▼
+              bdgroves.github.io/cascadia-wx
+              reads analysis.csv live · no rebuild
+              amber phosphor · updates on page load
 ```
 
 ---
 
-## Why FORTRAN
+## Why FORTRAN. Why Now. Why Anyone.
 
-FORTRAN (Formula Translation) was designed in 1957 by John Backus at IBM. The first successful numerical weather prediction run was performed in 1950 on ENIAC — and when NWP code was ported to faster machines, it was written in FORTRAN.
+FORTRAN was designed in 1957 by John Backus at IBM. The first successful numerical weather prediction run was performed in 1950 on ENIAC — and when that code was ported to faster machines, it was rewritten in FORTRAN. Today the National Weather Service runs FORTRAN. NCAR runs FORTRAN. ECMWF runs FORTRAN. The WRF model — the backbone of regional weather forecasting — is FORTRAN. The atmosphere has been computed in FORTRAN for 75 years.
 
-Today the National Weather Service runs FORTRAN. NCAR runs FORTRAN. ECMWF runs FORTRAN. The WRF (Weather Research & Forecasting) model — the backbone of modern regional weather forecasting — is FORTRAN. The atmosphere has been computed in FORTRAN for 75 years and will continue to be for decades more.
+How many people are writing new FORTRAN in 2026? Compiling it fresh on WSL, feeding it live government sensor data, running it through GitHub Actions every morning, and serving the output as a web dashboard? Not many. Maybe a handful of grad students who had no choice. Maybe some legacy system maintainers who know too much. And now, apparently, a developer in Lakewood, Washington, who thought it would be fun.
 
-Running FORTRAN in a GitHub Actions pipeline in 2026 isn't ironic. It's appropriate.
+It was fun. It still is. The numbers come in every morning. The atmosphere doesn't care what language you use to understand it — but FORTRAN has been understanding it longer than anything else, and it does it without apology, without overhead, and without anyone asking for permission.
+
+The hatch needs to be maintained. We maintain the hatch.
 
 ---
 
@@ -109,17 +196,17 @@ Running FORTRAN in a GitHub Actions pipeline in 2026 isn't ironic. It's appropri
 
 | Item | Details |
 |------|---------|
-| FORTRAN compiler | [GFortran](https://gcc.gnu.org/fortran/) 9+ |
-| Python | 3.9+ · stdlib only |
+| FORTRAN | [GFortran](https://gcc.gnu.org/fortran/) 9+ |
+| Python | 3.9+ · zero external dependencies |
 | OS | Linux, macOS, Windows (WSL) |
-| Data | NRCS AWDB + NOAA APIs — free, no key required |
+| Data | NRCS AWDB + NOAA APIs — free, no key, publicly funded |
 
 ```bash
 # Ubuntu / Debian / WSL
 sudo apt install gfortran
 
 # macOS
-brew install gcc   # includes gfortran
+brew install gcc
 ```
 
 ---
@@ -127,30 +214,12 @@ brew install gcc   # includes gfortran
 ## Build & Run
 
 ```bash
-# 1. Fetch live SNOTEL + valley data
 python3 fetch_wx.py
-
-# 2. Compile
 gfortran -O2 -o cascadia-wx CASCADIA-WX.f90 -lm
-
-# 3. Run
 ./cascadia-wx
-
-# 4. View report
 cat cascadia-wx-report.txt
 
-# Or: make
-```
-
----
-
-## GitHub Actions
-
-Runs daily at **8:00 AM Pacific** (15:00 UTC) — after SNOTEL stations report their overnight data:
-
-```yaml
-schedule:
-  - cron: '0 15 * * *'
+# or just: make
 ```
 
 ---
@@ -159,14 +228,14 @@ schedule:
 
 ```
 cascadia-wx/
-├── CASCADIA-WX.f90                 ← Main FORTRAN source
-├── fetch_wx.py                     ← NRCS + NOAA fetcher (stdlib only)
-├── baselines.csv                   ← 30-year SNOTEL medians
-├── snotel_data.csv                 ← Live snowpack data (updated daily)
-├── valley_data.csv                 ← Surface temps for lapse rate (updated daily)
-├── cascadia-wx-report.txt          ← Formatted analysis report (updated daily)
-├── analysis.csv                    ← Machine-readable results (updated daily)
-├── index.html                      ← Live dashboard (reads analysis.csv)
+├── CASCADIA-WX.f90              ← FORTRAN source
+├── fetch_wx.py                  ← NRCS + NOAA fetcher
+├── baselines.csv                ← 30-year SNOTEL medians
+├── snotel_data.csv              ← Live snowpack (updated daily)
+├── valley_data.csv              ← Surface temps (updated daily)
+├── cascadia-wx-report.txt       ← The printout (updated daily)
+├── analysis.csv                 ← Machine-readable (updated daily)
+├── index.html                   ← Live dashboard
 ├── Makefile
 ├── pixi.toml
 └── .github/workflows/cascadia-wx.yml
@@ -176,14 +245,18 @@ cascadia-wx/
 
 ## Related Projects
 
-- **[SIERRA-FLOW](https://bdgroves.github.io/sierra-flow-cobol)** — COBOL sister project. Live USGS streamflow, 8 Sierra Nevada gages, daily CI/CD.
+- **[SIERRA-FLOW](https://bdgroves.github.io/sierra-flow-cobol)** — COBOL sister project. Live USGS streamflow, 8 Sierra Nevada gages, percent-of-normal, trend analysis, daily CI/CD. Same idea, different watershed, different decade of computing history.
 - **[Sierra Streamflow Monitor](https://bdgroves.github.io/sierra-streamflow)** — 20-year spaghetti charts, Leaflet map, Tuolumne/Merced/Stanislaus.
 - **[EDGAR](https://bdgroves.github.io/EDGAR)** — Mariners/Rainiers analytics. Nightly updates.
-- **[brooksgroves.com](https://brooksgroves.com)** — Project hub.
+- **[brooksgroves.com](https://brooksgroves.com)** — All of it, in one place.
 
 ---
 
 ```
+  The hatch is maintained.
+  The numbers have been entered.
+  The snowpack has been measured.
+
   CASCADIA-WX.f90
   NORMAL TERMINATION.  RETURN CODE: 0.
   *** END OF JOB ***
