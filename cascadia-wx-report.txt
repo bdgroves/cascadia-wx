@@ -3,7 +3,7 @@
               CASCADIA-WX  //  PACIFIC NORTHWEST MOUNTAIN WEATHER ANALYSIS
                      RAINIER  ·  OLYMPICS  ·  CASCADES
 
-                          PROCESSING DATE: 2026-08-18
+                          PROCESSING DATE: 2026-08-19
 
 ====================================================================================================
 
@@ -11,38 +11,38 @@ SECTION I: SNOTEL STATION ANALYSIS
 
   STATION                            MASSIF     ELEV(FT)  SWE(IN)  %NORM  TMAX-C  TMIN-C  TAVG-C  SNOLVL(FT)  PHASE    MELT-IDX
 ----------------------------------------------------------------------------------------------------
-  Paradise                        RAINIER      5150.    0.00    0.0    23.1     9.5    16.3      16519.  RAIN      16.31
-  Cayuse Pass                     RAINIER      5260.    0.00    0.0    23.1     9.6    16.4      16673.  RAIN      16.36
-  Burnt Mountain                  RAINIER      4160.    0.00    0.0     0.0    -2.2    -1.1       1687.  SNOW       0.00
-  Dungeness                       OLYMPICS     3990.    0.00    0.0    22.7    10.1    16.4      15448.  RAIN      16.42
-  Buckinghorse                    OLYMPICS     4850.    0.00    0.0    21.3     9.4    15.3      15447.  RAIN      15.33
-  Snoqualmie Pass                 CASCADES     3000.    0.00    0.0     0.0    -2.2    -1.1        527.  SNOW       0.00
-  Stevens Pass                    CASCADES     4061.    0.00    0.0     0.0    -2.2    -1.1       1588.  SNOW       0.00
-  Stampede Pass                   CASCADES     3960.    0.00    0.0     0.0    -2.2    -1.1       1487.  SNOW       0.00
-  Elbow Lake                      CASCADES     3050.    0.10    0.5    22.0    12.8    17.4      15280.  RAIN      17.39
-  Bumping Ridge                   CASCADES     4600.    0.10    0.3    25.3     9.6    17.4      16874.  RAIN      17.44
-  Corral Pass                     RAINIER      5810.    0.00    0.0    22.1    10.8    16.4      17290.  RAIN      16.44
+  Paradise                        RAINIER      5150.    0.00    0.0    20.0     8.9    14.4      14828.  RAIN      14.44
+  Cayuse Pass                     RAINIER      5260.    0.00    0.0    20.8     8.8    14.8      15197.  RAIN      14.78
+  Burnt Mountain                  RAINIER      4160.    0.00    0.0     0.0    -2.2    -1.1       1741.  SNOW       0.00
+  Dungeness                       OLYMPICS     3990.    0.00    0.0    23.2    12.6    17.9      16368.  RAIN      17.92
+  Buckinghorse                    OLYMPICS     4850.    0.00    0.0    21.1    12.0    16.6      16169.  RAIN      16.56
+  Snoqualmie Pass                 CASCADES     3000.    0.00    0.0     0.0    -2.2    -1.1        581.  SNOW       0.00
+  Stevens Pass                    CASCADES     4061.    0.00    0.0     0.0    -2.2    -1.1       1642.  SNOW       0.00
+  Stampede Pass                   CASCADES     3960.    0.00    0.0     0.0    -2.2    -1.1       1541.  SNOW       0.00
+  Elbow Lake                      CASCADES     3050.    0.10    0.5    23.7    12.7    18.2      15665.  RAIN      18.22
+  Bumping Ridge                   CASCADES     4600.    0.00    0.0    24.8     9.0    16.9      16178.  RAIN      16.89
+  Corral Pass                     RAINIER      5810.    0.00    0.0    19.3     8.6    13.9      15099.  RAIN      13.94
 
 SECTION II: LAPSE RATE & PRECIPITATION PHASE ANALYSIS
 
-  ENVIRONMENTAL LAPSE RATE:   -4.13 C/km
+  ENVIRONMENTAL LAPSE RATE:   -4.22 C/km
   DRY ADIABATIC LAPSE RATE:  -9.80 C/km
   MOIST ADIABATIC LAPSE RATE: -6.50 C/km
-  REGIONAL MEAN SNOW LEVEL:   10802. ft
+  REGIONAL MEAN SNOW LEVEL:   10455. ft
 
   STATION                            ELEV(FT)  LPS(C/km)  SNOLVL(FT)  SNOW%   RAIN%   STABILITY
 ----------------------------------------------------------------------------------------------------
-  Paradise                           5150.      1.60      16519.     5.0    95.0    STABLE      
-  Cayuse Pass                        5260.      1.60      16673.     5.0    95.0    STABLE      
-  Burnt Mountain                     4160.    -13.29       1687.    95.0     5.0    UNSTABLE    
-  Dungeness                          3990.      2.23      15448.     5.0    95.0    STABLE      
-  Buckinghorse                       4850.      0.99      15447.     5.0    95.0    STABLE      
-  Snoqualmie Pass                    3000.    -19.29        527.    95.0     5.0    UNSTABLE    
-  Stevens Pass                       4061.    -13.65       1588.    95.0     5.0    UNSTABLE    
-  Stampede Pass                      3960.    -14.04       1487.    95.0     5.0    UNSTABLE    
-  Elbow Lake                         3050.      4.24      15280.     5.0    95.0    STABLE      
-  Bumping Ridge                      4600.      2.71      16874.     5.0    95.0    STABLE      
-  Corral Pass                        5810.      1.49      17290.     5.0    95.0    STABLE      
+  Paradise                           5150.      0.31      14828.     5.0    95.0    STABLE      
+  Cayuse Pass                        5260.      0.53      15197.     5.0    95.0    STABLE      
+  Burnt Mountain                     4160.    -13.29       1741.    95.0     5.0    UNSTABLE    
+  Dungeness                          3990.      3.61      16368.     5.0    95.0    STABLE      
+  Buckinghorse                       4850.      1.90      16169.     5.0    95.0    STABLE      
+  Snoqualmie Pass                    3000.    -19.29        581.    95.0     5.0    UNSTABLE    
+  Stevens Pass                       4061.    -13.65       1642.    95.0     5.0    UNSTABLE    
+  Stampede Pass                      3960.    -14.04       1541.    95.0     5.0    UNSTABLE    
+  Elbow Lake                         3050.      5.29      15665.     5.0    95.0    STABLE      
+  Bumping Ridge                      4600.      2.27      16178.     5.0    95.0    STABLE      
+  Corral Pass                        5810.     -0.03      15099.     5.0    95.0    STABLE      
 
 SECTION III: MOUNTAIN MASSIF SNOWPACK SUMMARY
 
@@ -50,16 +50,16 @@ SECTION III: MOUNTAIN MASSIF SNOWPACK SUMMARY
 ------------------------------------------------------------
   RAINIER            4          0.00           0.0  WELL BELOW NORMAL
   OLYMPICS           2          0.00           0.0  WELL BELOW NORMAL
-  CASCADES           5          0.04           0.1  WELL BELOW NORMAL
+  CASCADES           5          0.02           0.1  WELL BELOW NORMAL
 
 SECTION IV: ATMOSPHERIC ANALYSIS
 
-  ATMOSPHERIC RIVER INDEX:       6.80
+  ATMOSPHERIC RIVER INDEX:       6.46
   AR STATUS:                  STRONG AR CONDITIONS
   STORM CLASSIFICATION:       PINEAPPLE EXPRESS
-  ENVIRONMENTAL LAPSE RATE:    -4.13 C/km
-  REGIONAL SNOW LEVEL:        10802. ft
-  REGIONAL SWE % NORMAL:         0.1%
+  ENVIRONMENTAL LAPSE RATE:    -4.22 C/km
+  REGIONAL SNOW LEVEL:        10455. ft
+  REGIONAL SWE % NORMAL:         0.0%
 
 ====================================================================================================
   END OF REPORT  //   11 STATIONS PROCESSED
