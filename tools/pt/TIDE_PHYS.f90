@@ -517,6 +517,7 @@ contains
     integer :: k
     call args(t, v, u, f, spd)
     call nodal(t, fu, uu)
+    ! sum the constituents: h = Z0 + SUM f H cos(V + u - kappa)
     h = st%z0
     if (present(dh)) dh = 0.0_dp
     do k = 1, nc

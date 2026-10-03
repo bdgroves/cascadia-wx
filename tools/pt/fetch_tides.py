@@ -30,6 +30,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -61,6 +62,12 @@ def http(url, tries=3, timeout=60):
             req = urllib.request.Request(url, headers=UA)
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return r.read()
+        except urllib.error.HTTPError as e:
+            last = e
+            if e.code in (400, 404):
+                raise                    # asking again won't help
+            # 403 and 429 are NOAA asking us to slow down: back right off
+            time.sleep((30 if e.code in (403, 429) else 4) * (i + 1))
         except Exception as e:          # noqa: BLE001
             last = e
             time.sleep(4 * (i + 1))
@@ -162,7 +169,14 @@ def station_parts(st, now, status):
                 for r in rows]
 
     def trend():
-        js = json.loads(http(f"{DP}/sealvltrends.json?station={sid}"))
+        try:
+            js = json.loads(http(f"{DP}/sealvltrends.json?station={sid}"))
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return []                # NOAA publishes no trend for this gauge
+            raise
+        if not js.get("SeaLvlTrends"):
+            return []                    # NOAA publishes no trend for this gauge
         t = js["SeaLvlTrends"][0]
         return [dict(station=sid, mm_per_yr=f"{float(t['trend']) * 25.4 / 10:.2f}",
                      err_mm_per_yr=f"{float(t['trendError']) * 25.4 / 10:.2f}",
@@ -229,6 +243,7 @@ def history(y0=1991, y1=2020):
         path = f"history/{sid}_{y}.csv"
         if os.path.exists(path):
             return path, "cached"
+        time.sleep(0.5)
         try:
             rows = datagetter(sid, "hourly_height", f"{y}0101", f"{y}1231 23:00")
         except Exception as e:           # noqa: BLE001
@@ -239,7 +254,7 @@ def history(y0=1991, y1=2020):
         write_csv(path, ["time", "ft"], rows)
         return path, f"{len(rows)} hours"
 
-    with ThreadPoolExecutor(4) as pool:
+    with ThreadPoolExecutor(2) as pool:          # gently: NOAA throttles bursts
         done = list(pool.map(one, jobs))
     got = [p for p, _ in done if p]
     for p, note in done:

@@ -630,7 +630,12 @@ contains
     integer, intent(in) :: i
     real(dp) :: yr(maxm)
     integer :: a
-    if (nm(i) < 120) return
+    if (nm(i) < 240) then
+      if (nm(i) > 0) call note('TIDE019I ' // trim(sname(i)) // &
+        ': ' // trim(itoa(nm(i))) // ' MONTHLY MEANS, TOO FEW ' // &
+        'FOR A TREND', 0)
+      return
+    end if
     do a = 1, nm(i)
       yr(a) = my(a, i) + (mmo(a, i) - 0.5_dp) / 12.0_dp
     end do
@@ -732,7 +737,8 @@ contains
   subroutine write_series()
     integer :: hh, a
     real(dp) :: t, h, ob
-    call csv_open('series.csv', 'station,time_utc,level_ft,tide_ft')
+    call csv_open('series.csv', &
+      'station,time_utc,level_ft,tide_ft,surge_ft')
     t0i = floor(tnow) - 7 * 24
     do i = 1, ns
       if (nhc(i) < 30) cycle
@@ -749,7 +755,7 @@ contains
           if (abs(ot(a, i) - t) < 0.01_dp) ob = oh(a, i)
         end if
         write(u, '(A)') trim(sid(i)) // ',' // tstr(t) // ',' // &
-          cs(ob, 2) // ',' // cs(h, 2)
+          cs(ob, 2) // ',' // cs(h, 2) // ',' // cs(dif(ob, h), 2)
       end do
     end do
     call csv_close('series.csv')
@@ -835,14 +841,15 @@ contains
     real(dp) :: s
     call csv_open('trend.csv', 'station,name,first_year,last_year,' &
       // 'months,mm_per_yr,ci95_mm_per_yr,in_per_century,lag1,' // &
-      'noaa_mm_per_yr,noaa_err_mm_per_yr')
+      'noaa_mm_per_yr,noaa_err_mm_per_yr,line_first_ft,line_last_ft')
     do i = 1, ns
       write(u, '(A)') trim(sid(i)) // ',' // trim(sname(i)) // ',' // &
         trim(itoa(ty0(i))) // ',' // trim(itoa(ty1(i))) // ',' // &
         trim(itoa(tnm(i))) // ',' // cs(sc(tb(i), ft2mm), 2) // ',' &
         // cs(sc(tse(i), 1.96_dp * ft2mm), 2) // ',' // &
         cs(sc(tb(i), 1200.0_dp), 1) // ',' // cs(trho(i), 2) // ',' &
-        // cs(ntr(i), 2) // ',' // cs(nte(i), 2)
+        // cs(ntr(i), 2) // ',' // cs(nte(i), 2) // ',' // &
+        cs(fit(i, ty0(i)), 3) // ',' // cs(fit(i, ty1(i)), 3)
     end do
     call csv_close('trend.csv')
     ! annual means, for the chart: years with at least 10 months
@@ -865,6 +872,23 @@ contains
     end do
     call csv_close('annual.csv')
   end subroutine write_trend
+
+  ! the trend line at the middle of a year: through the mean of all
+  ! the months, at the trend's slope
+  real(dp) function fit(i, y)
+    integer, intent(in) :: i, y
+    real(dp) :: mt, mx_
+    integer :: a
+    fit = miss
+    if (.not. ok(tb(i)) .or. nm(i) == 0) return
+    mt = 0
+    mx_ = 0
+    do a = 1, nm(i)
+      mt = mt + my(a, i) + (mmo(a, i) - 0.5_dp) / 12.0_dp
+      mx_ = mx_ + mv(a, i)
+    end do
+    fit = mx_ / nm(i) + tb(i) * (y + 0.5_dp - mt / nm(i))
+  end function fit
 
   real(dp) function sc(v, k)
     real(dp), intent(in) :: v, k
@@ -1088,9 +1112,8 @@ contains
         rf(nte(i), 6, 2)
     end do
     write(u, '(A)') '  LEAST SQUARES WITH A MEAN FOR EACH ' // &
-      'CALENDAR ' // &
-      'MONTH; THE UNCERTAINTY ALLOWS FOR ONE MONTH FOLLOWING ' // &
-      'ANOTHER (AR1), AS NOAA DOES.'
+      'CALENDAR MONTH. THE UNCERTAINTY IS WIDENED FOR ONE MONTH ' // &
+      'FOLLOWING ANOTHER (AR1); NOAA''S MODEL GIVES A NARROWER ONE.'
     write(u, '(A)') '  THE LAND MOVES TOO: THESE ARE RELATIVE SEA ' // &
       'LEVEL, THE WATER AGAINST THE PIER.'
     write(u, '(A)')
