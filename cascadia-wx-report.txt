@@ -1,5 +1,5 @@
 ====================================================================================================================================
-CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-10-03 20:44 UTC
+CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-10-03 21:01 UTC
                                      QUILLAYUTE - SALEM - MEDFORD - SPOKANE   RAINIER - OLYMPICS - CASCADES
 WATER YEAR 2027                                                    NORMALS: 1991-2020 (BALLOONS AND NRCS)
 ====================================================================================================================================
