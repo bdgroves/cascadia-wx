@@ -1055,7 +1055,7 @@ contains
 
   !-- the printed report, 132 columns ------------------------------
   subroutine write_report()
-    integer :: u, a, b, m, n, nar, kmax, key, c
+    integer :: u, a, b, m, n, nar, kmax, key, c, prev
     character(len=132) :: rule, dash
     type(sounding) :: s
     real(dp) :: pz(7), v(7), imax
@@ -1168,19 +1168,24 @@ contains
       write(u, '(A20)', advance='no') adjustr(bname(b))
     end do
     write(u, '(A)')
-    do a = 0, 7
+    ! the eight latest launch times at any site, newest first
+    prev = huge(prev)
+    do a = 1, 8
       key = 0
       do b = 1, nb
-        if (lat(b) - a >= 1) then
-          if (sst(lat(b) - a) == b) key = max(key, ser(lat(b)-a)%key)
-        end if
+        if (lat(b) == 0) cycle
+        do c = max(1, lat(b) - 15), lat(b)
+          if (sst(c) == b .and. ser(c)%key < prev) &
+            key = max(key, ser(c)%key)
+        end do
       end do
       if (key == 0) exit
+      prev = key
       kiso = key_iso(key)
       write(u, '(2X,A16)', advance='no') kiso(1:16)
       do b = 1, nb
         m = 0
-        do c = max(1, lat(b) - 9), lat(b)
+        do c = max(1, lat(b) - 15), lat(b)
           if (lat(b) == 0) exit
           if (sst(c) == b .and. ser(c)%key == key) m = c
         end do
