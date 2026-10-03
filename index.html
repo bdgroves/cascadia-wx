@@ -246,7 +246,7 @@ footer a{color:var(--dim)}
 
 <footer>
   <div><a href="https://github.com/bdgroves/cascadia-wx">github.com/bdgroves/cascadia-wx</a> · <a href="https://brooksgroves.com/meteorology.html">More weather projects</a> · <a href="https://brooksgroves.com">brooksgroves.com</a></div>
-  <div>Data: NWS radiosondes via the <a href="https://mesonet.agron.iastate.edu/archive/raob/">Iowa Environmental Mesonet</a> · <a href="https://www.nrcs.usda.gov/resources/data-and-reports/snow-and-climate-monitoring-predefined-reports-and-maps">NRCS SNOTEL</a> · Map © OpenStreetMap, © CARTO</div>
+  <div>Data: NWS radiosondes via the <a href="https://mesonet.agron.iastate.edu/archive/raob/">Iowa Environmental Mesonet</a> · <a href="https://www.nrcs.usda.gov/resources/data-and-reports/snow-and-climate-monitoring-predefined-reports-and-maps">NRCS SNOTEL</a> · Map tiles © Esri, © OpenStreetMap contributors</div>
 </footer>
 </div>
 
@@ -539,7 +539,7 @@ const ago = v => { const h = Math.round((Date.now() - iso(v).getTime()) / 36e5);
   // map
   try {
     const map = L.map('map', {scrollWheelZoom:false}).setView([45.6, -121.0], 6);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'© OpenStreetMap, © CARTO', maxZoom:12}).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {attribution:'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors', maxZoom:16}).addTo(map);
     const A = anT ? csv(anT) : [];
     for (const s of ST){
       const a = A.find(x => x.triplet === s.triplet) || {};
