@@ -183,6 +183,8 @@ def soundings(today, status):
         st = b["id"]
         k = last.get(st)
         since = datetime(int(k[:4]), int(k[4:6]), int(k[6:8]), int(k[8:10]), tzinfo=timezone.utc) if k else first
+        # look back 10 days every run: the archive fills gaps late, and FORTRAN replaces a sounding with the same key
+        since = max(first, min(since, now - timedelta(days=10)))
         got, chunk = [], since
         try:
             while chunk < now:

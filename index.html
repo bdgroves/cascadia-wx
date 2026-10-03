@@ -130,7 +130,8 @@ footer a{color:var(--dim)}
 .nlab{display:flex;justify-content:space-between;font-size:.64rem;color:var(--dim);gap:.4rem}
 .site dl{display:grid;grid-template-columns:auto 1fr;gap:.1rem .8rem;font-size:.74rem;margin-top:.8rem;border-top:1px dotted var(--line2);padding-top:.6rem}
 .site dt{color:var(--muted)}
-.site dd{color:var(--text);text-align:right}
+.site dd{color:var(--text);text-align:right;white-space:nowrap}
+.site abbr{text-decoration:none;border-bottom:1px dotted var(--faint);cursor:help}
 .site dd.ar{color:var(--blue)}
 .c{font-weight:500}
 .c.mb{color:var(--blue)} .c.b{color:#8fc9e6} .c.n{color:var(--muted)} .c.a{color:#ffcf66} .c.ma{color:var(--red)}
@@ -239,7 +240,7 @@ footer a{color:var(--dim)}
     <p><strong>Normal, built in FORTRAN.</strong> A second program, NORMALS, reads every 00Z and 12Z balloon from the four sites from 1991 through 2020, works out each one's freezing level, precipitable water and vapour transport with the same code as the daily run, and keeps the 10th to 90th percentiles for every site and day of the year, using every balloon within a week of the date. <span id="nrm-note"></span></p>
     <p><strong>What's real.</strong> Every number on this page comes from a file FORTRAN wrote; the page draws charts and does no arithmetic of its own. The balloon data are the National Weather Service's radiosonde reports, from the Iowa Environmental Mesonet archive. Snowpack comes from the NRCS SNOTEL network with NRCS's own 1991–2020 medians. When a source is down, the job says so with return code 4 and keeps the last good data instead of filling in numbers.</p>
     <p><strong>Corrected in October 2026.</strong> The first version, from April, asked NRCS for three stations that don't exist (Snoqualmie, Stevens and Stampede passes) and quietly filled in zero snow when it got nothing back. It compared every day against made-up April 1 normals, and its "atmospheric river index" was a formula of snow level and snowpack, not a measurement. So the April reading that the passes were bare and the Cascades were at 15% of normal was wrong. NRCS's own numbers show the Snoqualmie Pass station holding about 25 inches of water that week, close to half of normal. Version 3 is rebuilt on the balloons, which measure the atmosphere directly. <a href="https://brooksgroves.com/blog/cascadia-wx-revisited-post.html">The write-up</a> explains it.</p>
-    <p><strong>Limits.</strong> One balloon is one place at one moment, not a forecast; the official atmospheric-river scale also weighs how long a river lasts. Snow level is a rule of thumb. SNOTEL air temperatures carry a known sensor bias that NRCS is working on.</p>
+    <p><strong>Limits.</strong> One balloon is one place at one moment, not a forecast; the official atmospheric-river scale also weighs how long a river lasts. Not every site launches at the classic 00Z and 12Z any more: Spokane has gone up at 06Z and 18Z since at least October 2025, and Medford at 00Z and 18Z since July 2026. Their normals come from 00Z and 12Z flights, so for those launches the comparison is rougher near the ground, where the time of day matters most. The Iowa archive sometimes misses a few days that other archives have; each run looks back ten days so late arrivals get picked up. Snow level is a rule of thumb. SNOTEL air temperatures carry a known sensor bias that NRCS is working on.</p>
   </div>
 </section>
 
@@ -444,6 +445,7 @@ function codingForm(src){
 const DOY0 = [0,31,60,91,121,152,182,213,244,274,305,335];
 const doy366 = d => DOY0[d.getUTCMonth()] + d.getUTCDate();      // same calendar as the FORTRAN
 const cap = s => s ? s[0] + s.slice(1).toLowerCase() : '';
+const ago = v => { const h = Math.round((Date.now() - iso(v).getTime()) / 36e5); return h < 48 ? h + ' h ago' : Math.round(h / 24) + ' days ago'; };
 (async function(){
   const get = async f => { try { return await text(f); } catch(e){ console.warn(e); return null; } };
   const [sumT, airT, uaT, seT, nrT, balT, stT, anT, maT, reT, daT, logT, repT, srcT] = await Promise.all(
@@ -473,13 +475,13 @@ const cap = s => s ? s[0] + s.slice(1).toLowerCase() : '';
     const bar = a.fl_p10 ? `<div class="nbar" aria-hidden="true"><i class="o" style="left:${w(lo)}%;width:${(w(hi)-w(lo))}%"></i><i class="m" style="left:${w(+a.fl_p25)}%;width:${(w(+a.fl_p75)-w(+a.fl_p25))}%"></i><b style="left:${w(x)}%"></b></div>
       <div class="nlab"><span>${fmt(lo)}</span><span>normal ${fmt(+a.fl_p25)}–${fmt(+a.fl_p75)}</span><span>${fmt(hi)}</span></div>` : '<div class="nlab">no normals yet</div>';
     return `<div class="site"><div class="k">${esc(a.name)} <span>${esc(a.station)}</span></div>
-      <div class="when">${esc(a.valid_utc.replace('T',' ').replace(':00Z','Z'))} · ${esc(a.hours_old)} h ago</div>
+      <div class="when">${esc(a.valid_utc.replace('T',' ').replace(':00Z','Z'))} · ${ago(a.valid_utc)}</div>
       <div class="v">${fmt(+a.freezing_ft)}<small> ft</small></div>
       <div class="u">freezing level · <b class="c ${cls(a.fl_vs_normal)}">${esc(a.fl_vs_normal.toLowerCase())}</b></div>${bar}
       <dl><dt>Snow level</dt><dd>~${fmt(+a.snow_level_ft)} ft</dd>
-      <dt>Precipitable water</dt><dd>${fmt(+a.pw_mm,1)} mm · <span class="c ${cls(a.pw_vs_normal)}">${esc(a.pw_vs_normal.toLowerCase())}</span></dd>
-      <dt>Vapour transport</dt><dd>${fmt(+a.ivt)} kg/m/s ${a.ivt_from ? 'from the ' + esc(a.ivt_from) : ''}</dd>
-      <dt>Atmospheric river</dt><dd class="${a.ar_category !== 'NONE' ? 'ar' : ''}">${esc(cap(a.ar_category))}</dd>
+      <dt><abbr title="Precipitable water">PW</abbr></dt><dd>${fmt(+a.pw_mm,1)} mm · <span class="c ${cls(a.pw_vs_normal)}">${esc(a.pw_vs_normal.toLowerCase())}</span></dd>
+      <dt><abbr title="Integrated vapour transport">IVT</abbr></dt><dd>${fmt(+a.ivt)} kg/m/s${a.ivt_from ? ' · ' + esc(a.ivt_from) : ''}</dd>
+      <dt><abbr title="Atmospheric river, by IVT">AR</abbr></dt><dd class="${a.ar_category !== 'NONE' ? 'ar' : ''}">${esc(cap(a.ar_category))}</dd>
       <dt>700 hPa wind</dt><dd>${esc(a.w700)}</dd></dl></div>`;
   }).join('') || '<p class="err">No balloons on file yet.</p>';
 
