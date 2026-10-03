@@ -1,5 +1,5 @@
 ====================================================================================================================================
-CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-10-03 21:04 UTC
+CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-10-03 21:10 UTC
                                      QUILLAYUTE - SALEM - MEDFORD - SPOKANE   RAINIER - OLYMPICS - CASCADES
 WATER YEAR 2027                                                    NORMALS: 1991-2020 (BALLOONS AND NRCS)
 ====================================================================================================================================
@@ -45,13 +45,13 @@ SECTION IV   RECENT BALLOONS    FREEZING LEVEL (FT) AND IVT (KG/M/S)
 
   BALLOON                    Quillayute               Salem             Medford             Spokane
   2026-10-03T18:00                  --                  --       15325      45       13730      26
+  2026-10-03T12:00       13961      66       15235      22                  --                  --
   2026-10-03T00:00       13663      79                  --       15343      45                  --
   2026-10-02T18:00                  --                  --       15288      45                  --
+  2026-10-02T12:00       11214     242                  --                  --                  --
   2026-10-02T00:00       11061     302                  --       15897      53                  --
   2026-10-01T18:00                  --                  --       16139      31                  --
-  2026-10-01T00:00       11133     186                  --       16441      70                  --
-  2026-09-30T18:00                  --                  --       16161      53                  --
-  2026-09-30T00:00       10492     452                  --       14927      99                  --
+  2026-10-01T12:00       11876     250                  --                  --                  --
 
 SECTION V    TEMPERATURE WITH HEIGHT
 
