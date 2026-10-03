@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CASCADIA-WX · Mountain Weather in FORTRAN</title>
-<meta name="description" content="Snowpack on Rainier, the Olympics and the Cascades, and the Quillayute weather balloon, analysed every day by a FORTRAN program.">
+<title>CASCADIA-WX · Weather Balloons in FORTRAN</title>
+<meta name="description" content="Four Pacific Northwest weather balloons, read twice a day by a FORTRAN program: freezing level, snow level and atmospheric rivers, against 30 years of balloons.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -113,6 +113,31 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);font-
 footer a{color:var(--dim)}
 .err{color:var(--red);font-size:.8rem}
 @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+/* the air now */
+.sites{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.site{border:1px solid var(--line);background:#000;padding:14px 16px}
+.site .k{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
+.site .k span{color:var(--dim);margin-left:.4rem}
+.site .when{font-size:.68rem;color:var(--dim)}
+.site .v{font-family:'VT323',monospace;font-size:2.9rem;line-height:1;color:var(--amber);margin:.45rem 0 0;text-shadow:0 0 10px rgba(255,179,0,.35)}
+.site .v small{font-size:1.1rem;color:var(--muted);text-shadow:none}
+.site .u{font-size:.74rem;color:var(--muted)}
+.nbar{position:relative;height:10px;margin:.7rem 0 .25rem;background:var(--line2)}
+.nbar i{position:absolute;top:0;bottom:0}
+.nbar i.o{background:rgba(197,134,0,.30)}
+.nbar i.m{background:rgba(197,134,0,.62)}
+.nbar b{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;background:var(--text);box-shadow:0 0 0 1px #000}
+.nlab{display:flex;justify-content:space-between;font-size:.64rem;color:var(--dim);gap:.4rem}
+.site dl{display:grid;grid-template-columns:auto 1fr;gap:.1rem .8rem;font-size:.74rem;margin-top:.8rem;border-top:1px dotted var(--line2);padding-top:.6rem}
+.site dt{color:var(--muted)}
+.site dd{color:var(--text);text-align:right}
+.site dd.ar{color:var(--blue)}
+.c{font-weight:500}
+.c.mb{color:var(--blue)} .c.b{color:#8fc9e6} .c.n{color:var(--muted)} .c.a{color:#ffcf66} .c.ma{color:var(--red)}
+.legend i.band{height:10px;background:rgba(197,134,0,.40)}
+.legend i.band.light{background:rgba(197,134,0,.16)}
+#prof-site{margin-top:.8rem}
+.h3{font-family:'VT323',monospace;font-weight:400;font-size:1.5rem;color:var(--amber);margin:1.4rem 0 .6rem}
 </style>
 </head>
 <body>
@@ -120,31 +145,31 @@ footer a{color:var(--dim)}
 
 <header>
   <h1>CASCADIA-WX</h1>
-  <div class="tag">Mountain weather in FORTRAN · Rainier · Olympics · Cascades</div>
-  <p class="lede">Twelve snow stations and one weather balloon, read twice a day by a FORTRAN program. It works out how much snow is on the mountains against normal, how high it's freezing, and whether an atmospheric river is coming ashore.</p>
+  <div class="tag">Upper air and snowpack in FORTRAN · Quillayute · Salem · Medford · Spokane</div>
+  <p class="lede">Four National Weather Service weather balloons go up over the Pacific Northwest twice a day. A FORTRAN program reads every level of every flight and works out how high it's freezing, where the snow line is and whether an atmospheric river is coming ashore. Then it ranks each balloon against 30 years of balloons on the same date.</p>
   <div class="status" id="status">
-    <div>DATA <b id="st-date">—</b></div>
-    <div>BALLOON <b id="st-ball">—</b></div>
+    <div>LATEST BALLOON <b id="st-ball">—</b></div>
     <div>LAST RUN <b id="st-run">—</b></div>
-    <div>STATIONS <b id="st-stn">—</b></div>
+    <div>SITES <b id="st-sites">—</b></div>
     <div>RETURN CODE <b id="st-rc" class="rc">—</b></div>
   </div>
 </header>
 
 <section>
   <h2>The job <small>job-log.txt · last run</small></h2>
-  <p class="sub">Every run is a batch job, like a mainframe: Python fetches the data, GFortran compiles the program, the program runs and sets a return code. 0 is normal; 4 means a station or the balloon was missing and the report says which.</p>
+  <p class="sub">Every run is a batch job, like a mainframe: Python fetches the balloons, GFortran compiles the program, the program runs and sets a return code. 0 is normal; 4 means something was missing or late, and the report says what.</p>
   <div class="console" id="console" aria-label="Job log"><span class="d">LOADING job-log.txt…</span></div>
 </section>
 
 <section>
-  <h2>Right now <small>from summary.csv</small></h2>
-  <div class="tiles" id="tiles"></div>
+  <h2>The air now <small>air.csv · against 1991–2020</small></h2>
+  <p class="sub">Each site's latest balloon. The bar under the freezing level spans the 10th to 90th percentile of every balloon within a week of today's date from 1991 to 2020; the darker middle is the normal range, 25th to 75th. The tick is today.</p>
+  <div class="sites" id="sites"></div>
 </section>
 
 <section>
-  <h2>The balloon <small>Quillayute, WA · KUIL</small></h2>
-  <p class="sub">Twice a day the National Weather Service launches a radiosonde from Quillayute on the Washington coast. FORTRAN reads every level it reports, works out the wet-bulb temperature and the water vapour at each one, and finds where the air crosses freezing. The dashes on the left are the SNOTEL stations' elevations.</p>
+  <h2>The balloon <small>level by level</small></h2>
+  <div class="toggle" id="prof-site" role="group" aria-label="Balloon site"></div>
   <div class="two">
     <div class="panel">
       <div class="legend"><span><i style="background:var(--s1)"></i>Temperature</span><span><i style="background:var(--s3)"></i>Wet-bulb</span><span><i style="background:var(--s2)"></i>Dew point</span></div>
@@ -152,21 +177,20 @@ footer a{color:var(--dim)}
     </div>
     <div class="panel">
       <div class="facts" id="ua-facts"></div>
-      <p class="sub" style="margin-top:1rem;font-size:.76rem">Snow level is estimated 1,000 ft below the freezing level, the National Weather Service's rule of thumb. IVT, integrated vapour transport, is the water vapour carried sideways through the column, surface to 300 hPa. At 250 kg/m/s or more it's atmospheric-river strength (Ralph and others, 2019).</p>
+      <p class="sub" style="margin-top:1rem;font-size:.76rem">Freezing level is where the temperature line crosses 0 °C. Snow level is estimated 1,000 ft below it, the National Weather Service's rule of thumb. IVT, integrated vapour transport, is the water vapour carried sideways through the whole column from the surface to 300 hPa; 250 kg/m/s or more is atmospheric-river strength (Ralph and others, 2019). The dashes at the left are the SNOTEL snow stations' elevations.</p>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>Every balloon <small>sounding_series.csv</small></h2>
-  <p class="sub">The freezing level and the vapour transport from every sounding FORTRAN has on file, two water years. The spikes in IVT are the atmospheric rivers; when they hit, the freezing level usually jumps too.</p>
+  <h2>Every balloon <small>against normal</small></h2>
+  <p class="sub">Freezing level at each launch, over the normal band for the date. Below the band means unusually cold air aloft; above it, warm. Then the vapour transport: spikes above 250 are the atmospheric rivers.</p>
+  <div class="toggle" id="ser-site" role="group" aria-label="Site"></div>
   <div class="toggle" id="ser-range" role="group" aria-label="Time range">
-    <button data-d="45" aria-pressed="true">45 days</button>
-    <button data-d="365">1 year</button>
-    <button data-d="0">All</button>
+    <button data-d="45" aria-pressed="true">45 days</button><button data-d="365">1 year</button><button data-d="0">All</button>
   </div>
   <div class="panel">
-    <div class="legend"><span><i style="background:var(--s1)"></i>Freezing level, ft</span><span><i class="dash"></i>SNOTEL stations, 3,050–5,810 ft</span></div>
+    <div class="legend"><span><i style="background:var(--s1)"></i>Freezing level, ft</span><span><i class="band"></i>Normal range, 25th–75th</span><span><i class="band light"></i>10th–90th</span></div>
     <div class="chart" id="fl"></div>
     <div class="legend" style="margin-top:1rem"><span><i style="background:var(--s2)"></i>IVT, kg/m/s</span><span><i class="dash"></i>250: atmospheric-river strength</span></div>
     <div class="chart" id="ivt"></div>
@@ -174,22 +198,19 @@ footer a{color:var(--dim)}
 </section>
 
 <section>
+  <h2>Atmospheric rivers <small>this water year, since October 1</small></h2>
+  <div class="panel tbl-wrap"><table id="ar"></table></div>
+</section>
+
+<section>
+  <h2>The map</h2>
+  <div id="map" role="img" aria-label="Map of the four balloon sites and the twelve SNOTEL stations"></div>
+</section>
+
+<section id="snow-sec">
   <h2>The snowpack <small>NRCS SNOTEL · against 1991–2020 medians</small></h2>
-  <p class="sub" id="snow-sub">Snow water equivalent (SWE) is the depth of water you'd get if you melted the snowpack. Each station is drawn against its own median for that day of the year.</p>
-  <div class="massifs" id="massifs"></div>
-  <div class="legend"><span><i style="background:var(--s1)"></i>This water year</span><span><i style="background:var(--s2)"></i>Last water year</span><span><i class="dash"></i>Median, 1991–2020</span></div>
-  <div class="sm" id="sm"></div>
-</section>
-
-<section>
-  <h2>Last water year <small>review.csv</small></h2>
-  <p class="sub" id="rev-sub"></p>
-  <div class="panel tbl-wrap"><table id="review"></table></div>
-</section>
-
-<section>
-  <h2>The stations</h2>
-  <div id="map" role="img" aria-label="Map of the SNOTEL stations and the Quillayute balloon site"></div>
+  <p class="sub" id="snow-sub">Twelve snow stations on Rainier, the Olympics and the Cascades, against NRCS's own medians for the date.</p>
+  <div id="snow-body"></div>
 </section>
 
 <section>
@@ -203,7 +224,7 @@ footer a{color:var(--dim)}
 
 <section>
   <h2>The source <small>on a FORTRAN coding form</small></h2>
-  <p class="sub">The loop that integrates water vapour up the balloon's column, copied live from <a href="https://github.com/bdgroves/cascadia-wx/blob/main/CASCADIA-WX.f90">CASCADIA-WX.f90</a>. On the 1957 form, columns 1–5 held a statement number, 6 marked a continued line, 7–72 the statement and 73–80 the card's ID. This is modern free-form FORTRAN, so it doesn't follow those columns, but the whole program keeps to the form's 72-column width and fits.</p>
+  <p class="sub">The loop that adds up the water vapour through the balloon's column, copied live from <a href="https://github.com/bdgroves/cascadia-wx/blob/main/CWX_PHYS.f90">CWX_PHYS.f90</a>. On the 1957 form, columns 1–5 held a statement number, 6 marked a continued line, 7–72 the statement and 73–80 the card's ID. This is modern free-form FORTRAN, so it doesn't follow those columns, but every line keeps to the form's 72-column width.</p>
   <div class="form">
     <div class="ttl"><b>FORTRAN CODING FORM</b><span>PROGRAM CASCADIA-WX · ROUTINE ANALYSE · PROGRAMMER B. GROVES</span><span id="form-date"></span></div>
     <div class="sheet" id="sheet"></div>
@@ -214,16 +235,17 @@ footer a{color:var(--dim)}
 <section>
   <h2>About</h2>
   <div class="notes">
-    <p><strong>Why FORTRAN.</strong> It was the first language built for scientists, in 1957, and the atmosphere has been computed in it ever since. The National Weather Service's models, NCAR's climate model, ECMWF's forecasts and the WRF model are all FORTRAN. This is a much smaller program in the same tradition: it reads data, applies physics and prints a report. It is the sister project of <a href="https://brooksgroves.com/sierra-flow-cobol/">SIERRA-FLOW</a>, which does Sierra Nevada rivers in COBOL.</p>
-    <p><strong>What's real.</strong> Every number on this page is read from a file FORTRAN wrote. The page draws charts; it does not calculate. Snow and precipitation come from the NRCS SNOTEL network with NRCS's own 1991–2020 medians. The balloon data are the National Weather Service's radiosonde reports, from the Iowa Environmental Mesonet archive. When a source is down, the job says so with return code 4 and keeps the last good data instead of filling in numbers.</p>
-    <p><strong>Corrected in October 2026.</strong> The first version, from April, asked NRCS for three stations that don't exist (Snoqualmie, Stevens and Stampede passes) and quietly filled in zero snow when it got nothing back. It also compared every day against made-up April 1 normals, and its "atmospheric river index" was a formula of snow level and snowpack, not a measurement. So the April reading that the passes were bare and the Cascades were at 15% of normal was wrong. NRCS's own numbers show the Snoqualmie Pass station holding about 25 inches of water that week, close to half of normal. Version 2 fixes all of this. <a href="https://brooksgroves.com/blog/cascadia-wx-revisited-post.html">The write-up</a> explains it.</p>
-    <p><strong>Limits.</strong> One balloon at one moment is a sample, not a forecast. The official atmospheric-river scale also weighs how long the river lasts. SNOTEL air temperatures carry a known sensor bias, which NRCS is working on. Snow level is a rule of thumb. Percent of median isn't shown until the median itself reaches an inch, because early-season percentages are meaningless.</p>
+    <p><strong>Why FORTRAN.</strong> It was the first language built for scientists, in 1957, and the atmosphere has been computed in it ever since: the National Weather Service's models, NCAR's climate model, ECMWF's forecasts and WRF are all FORTRAN. This is a much smaller program in that tradition. It is the sister project of <a href="https://brooksgroves.com/sierra-flow-cobol/">SIERRA-FLOW</a>, which does Sierra Nevada rivers in COBOL.</p>
+    <p><strong>Normal, built in FORTRAN.</strong> A second program, NORMALS, reads every 00Z and 12Z balloon from the four sites from 1991 through 2020, works out each one's freezing level, precipitable water and vapour transport with the same code as the daily run, and keeps the 10th to 90th percentiles for every site and day of the year, using every balloon within a week of the date. <span id="nrm-note"></span></p>
+    <p><strong>What's real.</strong> Every number on this page comes from a file FORTRAN wrote; the page draws charts and does no arithmetic of its own. The balloon data are the National Weather Service's radiosonde reports, from the Iowa Environmental Mesonet archive. Snowpack comes from the NRCS SNOTEL network with NRCS's own 1991–2020 medians. When a source is down, the job says so with return code 4 and keeps the last good data instead of filling in numbers.</p>
+    <p><strong>Corrected in October 2026.</strong> The first version, from April, asked NRCS for three stations that don't exist (Snoqualmie, Stevens and Stampede passes) and quietly filled in zero snow when it got nothing back. It compared every day against made-up April 1 normals, and its "atmospheric river index" was a formula of snow level and snowpack, not a measurement. So the April reading that the passes were bare and the Cascades were at 15% of normal was wrong. NRCS's own numbers show the Snoqualmie Pass station holding about 25 inches of water that week, close to half of normal. Version 3 is rebuilt on the balloons, which measure the atmosphere directly. <a href="https://brooksgroves.com/blog/cascadia-wx-revisited-post.html">The write-up</a> explains it.</p>
+    <p><strong>Limits.</strong> One balloon is one place at one moment, not a forecast; the official atmospheric-river scale also weighs how long a river lasts. Snow level is a rule of thumb. SNOTEL air temperatures carry a known sensor bias that NRCS is working on.</p>
   </div>
 </section>
 
 <footer>
   <div><a href="https://github.com/bdgroves/cascadia-wx">github.com/bdgroves/cascadia-wx</a> · <a href="https://brooksgroves.com/meteorology.html">More weather projects</a> · <a href="https://brooksgroves.com">brooksgroves.com</a></div>
-  <div>Data: <a href="https://www.nrcs.usda.gov/resources/data-and-reports/snow-and-climate-monitoring-predefined-reports-and-maps">NRCS SNOTEL</a> · NWS radiosondes via the <a href="https://mesonet.agron.iastate.edu/archive/raob/">Iowa Environmental Mesonet</a> · Map © OpenStreetMap, © CARTO</div>
+  <div>Data: NWS radiosondes via the <a href="https://mesonet.agron.iastate.edu/archive/raob/">Iowa Environmental Mesonet</a> · <a href="https://www.nrcs.usda.gov/resources/data-and-reports/snow-and-climate-monitoring-predefined-reports-and-maps">NRCS SNOTEL</a> · Map © OpenStreetMap, © CARTO</div>
 </footer>
 </div>
 
@@ -269,7 +291,7 @@ function lineChart(box, series, opt){
   const all = series.flatMap(s => s.pts);
   if (!all.length){ const t = el('text', {x:W/2, y:H/2, 'text-anchor':'middle'}, svg); t.textContent = 'No data yet'; return; }
   const x0 = opt.x0 ?? Math.min(...all.map(p => p.x)), x1 = opt.x1 ?? Math.max(...all.map(p => p.x));
-  const ys = all.map(p => p.y).concat(opt.refs ? opt.refs.map(r => r.y) : []);
+  const ys = all.map(p => p.y).concat(opt.refs ? opt.refs.map(r => r.y) : [], (opt.bands || []).flatMap(b => b.pts.flatMap(p => [p.lo, p.hi])));
   let y0 = opt.y0 ?? Math.min(...ys), y1 = opt.y1 ?? Math.max(...ys);
   if (y1 === y0) y1 = y0 + 1;
   const X = v => m.l + (v - x0) / (x1 - x0 || 1) * (W - m.l - m.r);
@@ -293,6 +315,12 @@ function lineChart(box, series, opt){
     for (let v = x0; v <= x1; v += step){ const t = el('text', {x:X(v), y:H-6, 'text-anchor':'middle'}, svg); t.textContent = dlabel(new Date(v)); }
   }
   for (const r of (opt.refs || [])) el('line', {x1:m.l, x2:W-m.r, y1:Y(r.y), y2:Y(r.y), stroke:C.faint, 'stroke-width':1.5, 'stroke-dasharray':'4 3'}, svg);
+  for (const b of (opt.bands || [])){
+    if (b.pts.length < 2) continue;
+    const up = b.pts.map(p => X(p.x).toFixed(1) + ',' + Y(p.hi).toFixed(1));
+    const dn = b.pts.slice().reverse().map(p => X(p.x).toFixed(1) + ',' + Y(p.lo).toFixed(1));
+    el('polygon', {points:up.concat(dn).join(' '), fill:b.fill}, svg);
+  }
   if (opt.band) el('rect', {x:m.l, width:W-m.l-m.r, y:Y(opt.band[1]), height:Y(opt.band[0])-Y(opt.band[1]), fill:'rgba(197,134,0,.08)'}, svg);
   for (const s of series){
     let d = '', pen = false, prev = null;
@@ -329,7 +357,7 @@ function lineChart(box, series, opt){
 function profileChart(box, rows, elevs, fl){
   box.innerHTML = '';
   const W = box.clientWidth || 560, H = 470, m = {l:58, r:16, t:12, b:34};
-  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img', 'aria-label':'Temperature, wet-bulb and dew point against height from the latest Quillayute balloon'}, box);
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img', 'aria-label':'Temperature, wet-bulb and dew point against height from the latest balloon'}, box);
   const P = rows.map(r => ({z:num(r.z_m)*3.28084, t:num(r.t_c), td:num(r.td_c), tw:num(r.tw_c), p:num(r.p_hpa), dir:num(r.wind_from_deg), kt:num(r.wind_kt)}))
                 .filter(r => r.z != null && r.z <= 32000);
   const z1 = 32000, tmin = -55, tmax = Math.max(25, ...P.map(r => r.t ?? 0)) ;
@@ -413,128 +441,131 @@ function codingForm(src){
 }
 
 /* ── load everything ─────────────────────────────────────────── */
+const DOY0 = [0,31,60,91,121,152,182,213,244,274,305,335];
+const doy366 = d => DOY0[d.getUTCMonth()] + d.getUTCDate();      // same calendar as the FORTRAN
+const cap = s => s ? s[0] + s.slice(1).toLowerCase() : '';
 (async function(){
   const get = async f => { try { return await text(f); } catch(e){ console.warn(e); return null; } };
-  const [sumT, anT, maT, reT, uaT, seT, daT, stT, logT, repT, srcT] = await Promise.all(
-    ['summary.csv','analysis.csv','massif.csv','review.csv','upper_air.csv','sounding_series.csv','snotel_daily.csv','stations.csv','job-log.txt','cascadia-wx-report.txt','CASCADIA-WX.f90'].map(get));
-  if (!sumT){ $('#tiles').innerHTML = '<p class="err">Could not load summary.csv.</p>'; return; }
+  const [sumT, airT, uaT, seT, nrT, balT, stT, anT, maT, reT, daT, logT, repT, srcT] = await Promise.all(
+    ['summary.csv','air.csv','upper_air.csv','sounding_series.csv','normals.csv','balloons.csv','stations.csv','analysis.csv','massif.csv','review.csv','snotel_daily.csv','job-log.txt','cascadia-wx-report.txt','CWX_PHYS.f90'].map(get));
+  if (!sumT){ $('#sites').innerHTML = '<p class="err">Could not load summary.csv.</p>'; return; }
   const S = Object.fromEntries(csv(sumT).map(r => [r.key, r.value]));
-  const A = anT ? csv(anT) : [], M = maT ? csv(maT) : [], R = reT ? csv(reT) : [];
-  const ST = stT ? csv(stT) : [];
+  const AIR = airT ? csv(airT) : [], B = balT ? csv(balT) : [], ST = stT ? csv(stT) : [];
+  const NR = {}; if (nrT) for (const r of csv(nrT)) (NR[r.station] ||= {})[+r.doy] = r;
+  const norm = (st, d) => (NR[st] || {})[doy366(d)];
 
-  // status bar
-  $('#st-date').textContent = S.data_date || '—';
-  $('#st-ball').textContent = S.sounding_valid_utc ? S.sounding_valid_utc.replace('T', ' ').replace(':00Z', 'Z') : '—';
+  // status
+  const latest = AIR.map(a => a.valid_utc).sort().pop();
+  $('#st-ball').textContent = latest ? latest.replace('T', ' ').replace(':00Z', 'Z') : '—';
   $('#st-run').textContent = S.run_utc ? S.run_utc + ' UTC' : '—';
-  $('#st-stn').textContent = `${S.stations_reporting ?? '—'} of ${S.stations ?? '—'} reporting`;
-  const rc = +S.return_code; const rcEl = $('#st-rc'); rcEl.textContent = String(rc).padStart(2, '0') + (rc === 0 ? ' NORMAL' : rc === 4 ? ' WARNING' : ' ERROR'); rcEl.classList.add(rc === 0 ? 'rc0' : rc === 4 ? 'rc4' : 'rc8');
+  $('#st-sites').textContent = `${S.balloon_sites_current ?? '—'} of ${S.balloon_sites ?? '—'} current`;
+  const rc = +S.return_code, rcEl = $('#st-rc');
+  rcEl.textContent = String(rc).padStart(2, '0') + (rc === 0 ? ' NORMAL' : rc === 4 ? ' WARNING' : ' ERROR');
+  rcEl.classList.add(rc === 0 ? 'rc0' : rc === 4 ? 'rc4' : 'rc8');
   if (logT) typeLog(logT);
+  if (nrT){ const n = new Set(csv(nrT).map(r => r.station)).size; $('#nrm-note').textContent = `Normals on file for ${n} sites.`; }
 
-  // tiles
-  const swePct = num(S.region_swe_pct), prPct = num(S.region_precip_pct);
-  const tiles = [
-    ['Freezing level', fmt(num(S.freezing_level_ft)), 'ft', `Over Quillayute at ${S.sounding_valid_utc ? S.sounding_valid_utc.slice(11,16) : '—'} UTC. Snow level about ${fmt(num(S.snow_level_ft))} ft.`],
-    ['Atmospheric river', S.ar_category || '—', '', `Vapour transport ${fmt(num(S.ivt))} kg/m/s from the ${S.ivt_from || '—'}. Atmospheric-river strength starts at 250.`],
-    ['Snowpack', swePct == null ? '—' : fmt(swePct) , swePct == null ? '' : '% of median', swePct == null ? `Water year ${S.water_year} has just begun, and the median snowpack is still under an inch, so a percentage would mean nothing yet.` : `All ${S.stations_reporting} stations, sum of snow water over sum of medians: ${S.region_class.toLowerCase()}.`],
-    ['Water-year precipitation', prPct == null ? '—' : fmt(prPct), prPct == null ? '' : '% of median', prPct == null ? 'Too early in the water year for a percentage to mean anything.' : `Rain and snow since October 1, against the 1991–2020 median to date.`],
-    ['Last winter’s peak', S.last_wy_peak_pct ? fmt(num(S.last_wy_peak_pct)) : '—', S.last_wy_peak_pct ? '% of median' : '', `Water year ${+S.water_year - 1}: the stations’ peak snow water, summed, against their median peaks.`],
-  ];
-  $('#tiles').innerHTML = tiles.map(([k,v,u,n]) => `<div class="tile"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="u">${u}</div><div class="n">${n}</div></div>`).join('');
+  // the air now: one card per site
+  const cls = v => ({'MUCH BELOW':'mb','BELOW':'b','NORMAL':'n','ABOVE':'a','MUCH ABOVE':'ma'}[v] || '');
+  $('#sites').innerHTML = AIR.map(a => {
+    const lo = +a.fl_p10, hi = +a.fl_p90, x = +a.freezing_ft;
+    const span = [Math.min(lo, x), Math.max(hi, x)], w = v => ((v - span[0]) / (span[1] - span[0] || 1) * 100).toFixed(1);
+    const bar = a.fl_p10 ? `<div class="nbar" aria-hidden="true"><i class="o" style="left:${w(lo)}%;width:${(w(hi)-w(lo))}%"></i><i class="m" style="left:${w(+a.fl_p25)}%;width:${(w(+a.fl_p75)-w(+a.fl_p25))}%"></i><b style="left:${w(x)}%"></b></div>
+      <div class="nlab"><span>${fmt(lo)}</span><span>normal ${fmt(+a.fl_p25)}–${fmt(+a.fl_p75)}</span><span>${fmt(hi)}</span></div>` : '<div class="nlab">no normals yet</div>';
+    return `<div class="site"><div class="k">${esc(a.name)} <span>${esc(a.station)}</span></div>
+      <div class="when">${esc(a.valid_utc.replace('T',' ').replace(':00Z','Z'))} · ${esc(a.hours_old)} h ago</div>
+      <div class="v">${fmt(+a.freezing_ft)}<small> ft</small></div>
+      <div class="u">freezing level · <b class="c ${cls(a.fl_vs_normal)}">${esc(a.fl_vs_normal.toLowerCase())}</b></div>${bar}
+      <dl><dt>Snow level</dt><dd>~${fmt(+a.snow_level_ft)} ft</dd>
+      <dt>Precipitable water</dt><dd>${fmt(+a.pw_mm,1)} mm · <span class="c ${cls(a.pw_vs_normal)}">${esc(a.pw_vs_normal.toLowerCase())}</span></dd>
+      <dt>Vapour transport</dt><dd>${fmt(+a.ivt)} kg/m/s ${a.ivt_from ? 'from the ' + esc(a.ivt_from) : ''}</dd>
+      <dt>Atmospheric river</dt><dd class="${a.ar_category !== 'NONE' ? 'ar' : ''}">${esc(cap(a.ar_category))}</dd>
+      <dt>700 hPa wind</dt><dd>${esc(a.w700)}</dd></dl></div>`;
+  }).join('') || '<p class="err">No balloons on file yet.</p>';
 
-  // upper air
-  const elevs = ST.map(s => +s.elev_ft);
-  if (uaT){ const U = csv(uaT); profileChart($('#profile'), U, elevs, num(S.freezing_level_ft)); window.addEventListener('resize', () => profileChart($('#profile'), U, elevs, num(S.freezing_level_ft))); }
-  const facts = [
-    ['Balloon', S.sounding_valid_utc ? S.sounding_valid_utc.replace('T',' ') : '—'],
-    ['Freezing level', fmt(num(S.freezing_level_ft)) + ' ft'],
-    ['Wet-bulb zero', fmt(num(S.wetbulb_zero_ft)) + ' ft'],
-    ['Snow level (estimate)', fmt(num(S.snow_level_ft)) + ' ft'],
-    ['Precipitable water', fmt(num(S.pw_mm),1) + ' mm'],
-    ['Vapour transport (IVT)', fmt(num(S.ivt)) + ' kg/m/s from the ' + (S.ivt_from || '—')],
-    ['Atmospheric river', S.ar_category || '—'],
-    ['850 hPa temperature', fmt(num(S.t850_c),1) + ' °C'],
-    ['Lapse rate, 850–700 hPa', fmt(num(S.free_air_lapse_c_km),1) + ' °C per km'],
-    ['Lapse rate, SNOTEL fit', S.mountain_lapse_c_km ? `${fmt(num(S.mountain_lapse_c_km),1)} °C per km (r² ${fmt(num(S.mountain_lapse_r2),2)})` : '—'],
-    ['700 hPa wind', (S.w700 || '—').replace(/^(\S+) (\d+) kt$/, '$2 kt from the $1')],
-  ];
-  $('#ua-facts').innerHTML = facts.map(([k,v]) => `<div><span>${k}</span><span>${esc(v)}</span></div>`).join('');
+  // profile with a site switch
+  const UA = uaT ? csv(uaT) : [], elevs = ST.map(s => +s.elev_ft);
+  const sites = B.filter(b => UA.some(r => r.station === b.id));
+  let psite = sites.find(b => b.id === 'KUIL')?.id || sites[0]?.id;
+  const drawProfile = () => {
+    const rows = UA.filter(r => r.station === psite), a = AIR.find(x => x.station === psite) || {};
+    profileChart($('#profile'), rows, elevs, num(a.freezing_ft));
+    const facts = [['Balloon', (a.valid_utc || '—').replace('T', ' ')], ['Freezing level', fmt(num(a.freezing_ft)) + ' ft · ' + (a.fl_vs_normal || '').toLowerCase()],
+      ['Normal for the date', a.fl_p25 ? `${fmt(+a.fl_p25)}–${fmt(+a.fl_p75)} ft` : '—'], ['Wet-bulb zero', fmt(num(a.wetbulb0_ft)) + ' ft'],
+      ['Snow level (estimate)', fmt(num(a.snow_level_ft)) + ' ft'], ['Precipitable water', fmt(num(a.pw_mm),1) + ' mm'],
+      ['Vapour transport (IVT)', fmt(num(a.ivt)) + ' kg/m/s from the ' + (a.ivt_from || '—')], ['Atmospheric river', cap(a.ar_category) || '—'],
+      ['850 hPa temperature', fmt(num(a.t850_c),1) + ' °C'], ['Lapse rate, 850–700 hPa', fmt(num(a.lapse_850_700_c_km),1) + ' °C per km'], ['700 hPa wind', a.w700 || '—']];
+    $('#ua-facts').innerHTML = facts.map(([k,v]) => `<div><span>${k}</span><span>${esc(v)}</span></div>`).join('');
+  };
+  const tabs = (box, list, cur, on) => {
+    box.innerHTML = list.map(b => `<button data-s="${esc(b.id)}" aria-pressed="${b.id === cur}">${esc(b.name)}</button>`).join('');
+    box.onclick = e => { const t = e.target.closest('button'); if (!t) return;
+      box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === t)); on(t.dataset.s); };
+  };
+  if (psite){ tabs($('#prof-site'), sites, psite, s => { psite = s; drawProfile(); }); drawProfile(); }
 
-  // sounding series
-  if (seT){
-    const SE = csv(seT).map(r => ({x:iso(r.valid_utc).getTime(), fl:num(r.freezing_ft), ivt:num(r.ivt), cat:r.ar_category, pw:num(r.pw_mm), key:r.valid_utc}));
-    const draw = days => {
-      const last = Math.max(...SE.map(r => r.x)), from = days ? last - days*864e5 : Math.min(...SE.map(r => r.x));
-      const W = SE.filter(r => r.x >= from);
-      const xf = p => { const r = W.find(q => q.x === p.x); return r ? r.key.replace('T', ' ').replace(':00Z', 'Z') : ''; };
-      lineChart($('#fl'), [{name:'Freezing level', color:C.s1, pts:W.filter(r => r.fl != null).map(r => ({x:r.x, y:r.fl})), gap:1.6*864e5}],
-        {label:'Freezing level over Quillayute by sounding', y0:0, band:[3050, 5810], tfmt:v => fmt(v) + ' ft', yfmt:v => v ? (v/1000) + 'k' : '0', xfmt:xf, snap:1.5*864e5, x0:from, x1:last});
-      lineChart($('#ivt'), [{name:'IVT', color:C.s2, pts:W.filter(r => r.ivt != null).map(r => ({x:r.x, y:r.ivt})), gap:1.6*864e5}],
-        {label:'Integrated vapour transport by sounding', y0:0, refs:[{y:250}], tfmt:v => fmt(v) + ' kg/m/s', xfmt:p => xf(p) + ' · ' + (W.find(q => q.x === p.x)?.cat || ''), snap:1.5*864e5, x0:from, x1:last, h:200});
-    };
-    let cur = 45; draw(cur);
-    $('#ser-range').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
-      document.querySelectorAll('#ser-range button').forEach(x => x.setAttribute('aria-pressed', x === b)); cur = +b.dataset.d; draw(cur); });
-    window.addEventListener('resize', () => draw(cur));
+  // series with the normal band
+  const SE = seT ? csv(seT).map(r => ({st:r.station, x:iso(r.valid_utc).getTime(), d:iso(r.valid_utc), fl:num(r.freezing_ft), ivt:num(r.ivt), cat:r.ar_category, key:r.valid_utc})) : [];
+  let ssite = psite || B[0]?.id, days = 45;
+  const drawSeries = () => {
+    const all = SE.filter(r => r.st === ssite); if (!all.length) return;
+    const last = Math.max(...all.map(r => r.x)), from = days ? last - days*864e5 : Math.min(...all.map(r => r.x));
+    const W = all.filter(r => r.x >= from), xf = p => (W.find(q => q.x === p.x)?.key || '').replace('T',' ').replace(':00Z','Z');
+    const band = [], wide = [];
+    for (let t = from; t <= last; t += 864e5){ const n = norm(ssite, new Date(t)); if (n && n.fl_p25){ band.push({x:t, lo:+n.fl_p25, hi:+n.fl_p75}); wide.push({x:t, lo:+n.fl_p10, hi:+n.fl_p90}); } }
+    lineChart($('#fl'), [{name:'Freezing level', color:C.s1, pts:W.filter(r => r.fl != null).map(r => ({x:r.x, y:r.fl})), gap:1.6*864e5}],
+      {label:'Freezing level by balloon against the 1991-2020 normal', y0:0, bands:[{pts:wide, fill:'rgba(197,134,0,.07)'}, {pts:band, fill:'rgba(197,134,0,.16)'}],
+       tfmt:v => fmt(v) + ' ft', yfmt:v => v ? (v/1000) + 'k' : '0', xfmt:xf, snap:1.5*864e5, x0:from, x1:last});
+    lineChart($('#ivt'), [{name:'IVT', color:C.s2, pts:W.filter(r => r.ivt != null).map(r => ({x:r.x, y:r.ivt})), gap:1.6*864e5}],
+      {label:'Integrated vapour transport by balloon', y0:0, refs:[{y:250}], tfmt:v => fmt(v) + ' kg/m/s',
+       xfmt:p => xf(p) + ' · ' + cap(W.find(q => q.x === p.x)?.cat || ''), snap:1.5*864e5, x0:from, x1:last, h:200});
+  };
+  if (ssite){
+    tabs($('#ser-site'), B.filter(b => SE.some(r => r.st === b.id)), ssite, s => { ssite = s; drawSeries(); });
+    $('#ser-range').onclick = e => { const b = e.target.closest('button'); if (!b) return;
+      document.querySelectorAll('#ser-range button').forEach(x => x.setAttribute('aria-pressed', x === b)); days = +b.dataset.d; drawSeries(); };
+    drawSeries();
   }
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (psite) drawProfile(); drawSeries(); }, 200); });
 
-  // massifs
-  $('#massifs').innerHTML = M.map(r => {
-    const pct = num(r.swe_pct), pp = num(r.wy_precip_pct);
-    return `<div class="tile"><div class="k">${r.massif === 'ALL' ? 'All stations' : r.massif[0] + r.massif.slice(1).toLowerCase()}</div>
-      <div class="v">${pct == null ? '—' : fmt(pct)}</div><div class="u">${pct == null ? 'season not started' : '% of median'}</div>
-      <div class="n">${r.class === 'SEASON NOT STARTED' ? '' : r.class[0] + r.class.slice(1).toLowerCase() + ' · '}${fmt(num(r.swe_in),1)} in of snow water at ${r.stations} station${r.stations === '1' ? '' : 's'}<br>
-      Last winter's peak: ${r.last_wy_peak_pct ? fmt(num(r.last_wy_peak_pct)) + '% of median' : '—'}${pp != null ? `<br>Precipitation ${fmt(pp)}% of median` : ''}</div></div>`;
-  }).join('');
-
-  // small multiples
-  if (daT){
-    const D = csv(daT);
-    const wy = +S.water_year, cur0 = Date.UTC(wy-1, 9, 1), prev0 = Date.UTC(wy-2, 9, 1);
-    const by = {}; for (const r of D) (by[r.triplet] ||= []).push(r);
-    const sm = $('#sm'); sm.innerHTML = '';
-    const drawSM = () => {
-      sm.innerHTML = '';
-      for (const s of ST){
-        const rows = by[s.triplet] || [], a = A.find(x => x.triplet === s.triplet) || {};
-        const pts = (from, key) => rows.filter(r => { const t = iso(r.date).getTime(); return t >= from && t < from + 366*864e5 && r[key] !== ''; })
-          .map(r => ({x: cur0 + (iso(r.date).getTime() - from), y: +r[key]}));
-        const cell = document.createElement('div'); cell.className = 'cell';
-        const st = a.status && a.status !== 'OK' ? ` · <span style="color:var(--red)">${a.status.toLowerCase()}</span>` : '';
-        cell.innerHTML = `<div class="h"><b>${s.name}</b><span>${(+s.elev_ft).toLocaleString()} ft${st}</span></div><div class="h"><span>${a.swe_in !== '' && a.swe_in != null ? a.swe_in + ' in' : '—'}${a.swe_pct ? ' · ' + a.swe_pct + '% of median' : ''}</span><span>${s.massif[0] + s.massif.slice(1).toLowerCase()}</span></div><div class="chart"></div>`;
-        sm.appendChild(cell);
-        lineChart(cell.querySelector('.chart'), [
-          {name:'Median', color:C.faint, dash:'4 3', w:1.5, pts:pts(prev0, 'swe_med')},
-          {name:`WY ${wy-1}`, color:C.s2, pts:pts(prev0, 'swe')},
-          {name:`WY ${wy}`, color:C.s1, pts:pts(cur0, 'swe')},
-        ], {label:`Snow water equivalent at ${s.name}`, h:150, y0:0, x0:cur0, x1:cur0 + 365*864e5, tfmt:v => fmt(v,1) + ' in', yfmt:v => v + '"', snap:2*864e5});
-      }
-    };
-    drawSM(); let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawSM, 200); });
-  }
-
-  // review table
-  const all = M.find(r => r.massif === 'ALL');
-  $('#rev-sub').textContent = all && all.last_wy_peak_pct ? `Water year ${+S.water_year - 1}, October to September. Summed over the stations with data, the snowpack peaked at ${all.last_wy_peak_pct}% of the median peak, and most stations melted out weeks early.` : '';
-  const md = s => s ? dlabel(iso(s)) : '—';
-  $('#review').innerHTML = '<thead><tr><th>Station</th><th class="l">Massif</th><th>Peak, in</th><th>Date</th><th>Median peak</th><th>Date</th><th>% of median</th><th>Melted out</th><th>Median</th><th>Days early</th></tr></thead><tbody>' +
-    R.map(r => `<tr><td>${r.name}</td><td class="l">${r.massif[0] + r.massif.slice(1).toLowerCase()}</td><td class="hi">${r.peak_in || '—'}</td><td>${md(r.peak_date)}</td><td>${r.median_peak_in || '—'}</td><td>${md(r.median_peak_date)}</td><td class="hi">${r.peak_pct || '—'}</td><td>${md(r.melt_out)}</td><td>${md(r.median_melt_out)}</td><td>${r.melt_out_days_early || '—'}</td></tr>`).join('') + '</tbody>';
+  // atmospheric rivers this water year
+  $('#ar').innerHTML = '<thead><tr><th>Site</th><th>Balloons</th><th>At AR strength</th><th>Strongest IVT</th><th>When</th><th class="l">Strength</th></tr></thead><tbody>' +
+    AIR.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.wy_soundings)}</td><td class="hi">${esc(a.wy_ar_soundings)}</td><td>${a.wy_max_ivt ? fmt(+a.wy_max_ivt) + ' kg/m/s' : '—'}</td><td>${esc((a.wy_max_ivt_utc || '—').replace('T',' ').replace(':00Z','Z'))}</td><td class="l">${a.wy_max_ivt ? (+a.wy_max_ivt >= 250 ? 'atmospheric river' : 'below AR strength') : '—'}</td></tr>`).join('') + '</tbody>';
 
   // map
   try {
-    const map = L.map('map', {scrollWheelZoom:false, attributionControl:true}).setView([47.4, -122.3], 7);
+    const map = L.map('map', {scrollWheelZoom:false}).setView([45.6, -121.0], 6);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'© OpenStreetMap, © CARTO', maxZoom:12}).addTo(map);
+    const A = anT ? csv(anT) : [];
     for (const s of ST){
       const a = A.find(x => x.triplet === s.triplet) || {};
-      L.circleMarker([+s.lat, +s.lon], {radius:7, color:'#000', weight:2, fillColor:a.status === 'OK' ? C.s1 : '#ff6b5b', fillOpacity:1}).addTo(map)
-        .bindPopup(`<b>${s.name}</b><br>${(+s.elev_ft).toLocaleString()} ft · ${s.note}<br>SWE ${a.swe_in || '—'} in${a.swe_pct ? ' (' + a.swe_pct + '% of median)' : ''}<br>NRCS ${s.triplet}`);
+      L.circleMarker([+s.lat, +s.lon], {radius:5, color:'#000', weight:1.5, fillColor:C.s3, fillOpacity:1}).addTo(map)
+        .bindPopup(`<b>${esc(s.name)}</b> SNOTEL<br>${(+s.elev_ft).toLocaleString()} ft · ${esc(s.note)}${a.swe_in ? '<br>SWE ' + esc(a.swe_in) + ' in' : ''}`);
     }
-    L.marker([47.937, -124.555], {icon:L.divIcon({className:'', html:'<div style="color:#4fc3f7;font:600 20px IBM Plex Mono">◆</div>', iconSize:[16,16], iconAnchor:[8,10]})})
-      .addTo(map).bindPopup('<b>Quillayute (KUIL)</b><br>NWS weather balloon, launched at 00Z and 12Z');
+    for (const b of B){
+      const a = AIR.find(x => x.station === b.id) || {};
+      L.marker([+b.lat, +b.lon], {icon:L.divIcon({className:'', html:'<div style="color:#ffb300;font:600 22px IBM Plex Mono;text-shadow:0 0 6px #000">◆</div>', iconSize:[18,18], iconAnchor:[9,12]})})
+        .addTo(map).bindPopup(`<b>${esc(b.name)}</b> (${esc(b.id)}, WMO ${esc(b.wmo)})<br>${esc(b.note)}${a.freezing_ft ? `<br>Freezing level ${fmt(+a.freezing_ft)} ft, ${esc(a.fl_vs_normal.toLowerCase())}` : ''}`);
+    }
   } catch(e){ console.warn(e); }
+
+  // snowpack, when NRCS has answered
+  if (S.snow === 'yes' && anT){
+    const A = csv(anT), M = maT ? csv(maT) : [], R = reT ? csv(reT) : [];
+    $('#snow-sub').textContent = `Data for ${S.data_date}. ${S.region_swe_pct ? 'All stations: ' + S.region_swe_pct + '% of median.' : 'The season has barely begun: the median snowpack is still under an inch, so percentages would mean nothing yet.'}${S.last_wy_peak_pct ? ' Last winter peaked at ' + S.last_wy_peak_pct + '% of the median peak.' : ''}`;
+    const md = s => s ? dlabel(iso(s)) : '—';
+    $('#snow-body').innerHTML = `<div class="panel tbl-wrap"><table><thead><tr><th>Station</th><th class="l">Massif</th><th>Elev, ft</th><th>SWE, in</th><th>Median</th><th>% of median</th><th>Status</th></tr></thead><tbody>${
+      A.map(r => `<tr><td>${esc(r.name)}</td><td class="l">${esc(cap(r.massif))}</td><td>${fmt(+r.elev_ft)}</td><td class="hi">${r.swe_in || '—'}</td><td>${r.swe_median_in || '—'}</td><td>${r.swe_pct || '—'}</td><td>${esc(r.status.toLowerCase())}</td></tr>`).join('')}</tbody></table></div>
+      <h3 class="h3">Last winter, station by station</h3>
+      <div class="panel tbl-wrap"><table><thead><tr><th>Station</th><th>Peak, in</th><th>Date</th><th>Median peak</th><th>% of median</th><th>Melted out</th><th>Median</th><th>Days early</th></tr></thead><tbody>${
+      R.map(r => `<tr><td>${esc(r.name)}</td><td class="hi">${r.peak_in || '—'}</td><td>${md(r.peak_date)}</td><td>${r.median_peak_in || '—'}</td><td class="hi">${r.peak_pct || '—'}</td><td>${md(r.melt_out)}</td><td>${md(r.median_melt_out)}</td><td>${r.melt_out_days_early || '—'}</td></tr>`).join('')}</tbody></table></div>`;
+  } else {
+    $('#snow-body').innerHTML = '<p class="sub">No NRCS data on file yet. The snow service was down when this version first ran; this section fills in on the first run after it answers.</p>';
+  }
 
   if (repT) $('#report').textContent = repT;
   if (srcT) codingForm(srcT);
-  $('#form-date').textContent = 'DATE ' + (S.data_date || '');
+  $('#form-date').textContent = 'DATE ' + (S.pacific_date || '');
 })();
 </script>
 </body>
