@@ -54,7 +54,7 @@ def pacific_today(now_utc):
     return (now_utc - timedelta(hours=off)).date()
 
 
-def http(url, tries=3, timeout=120):
+def http(url, tries=3, timeout=60):
     last = None
     for i in range(tries):
         try:
@@ -78,7 +78,7 @@ def fetch_station(triplet, start, end):
         "stationTriplets": triplet, "elements": ",".join(ELEMENTS),
         "duration": "DAILY", "beginDate": str(start), "endDate": str(end),
         "centralTendencyType": "MEDIAN"})
-    payload = json.loads(http(f"{AWDB}?{q}"))
+    payload = json.loads(http(f"{AWDB}?{q}", tries=2, timeout=45))
     rows = {}
     blocks = payload[0].get("data", []) if payload else []
     for b in blocks:
@@ -126,6 +126,9 @@ def snotel(today, status):
     for s in stations:
         t = s["triplet"]
         try:
+            if not ok and len(failed) >= 3:
+                # three in a row failed: NRCS is down, don't wait on the rest
+                raise RuntimeError("skipped, NRCS not answering")
             rows = fetch_station(t, start, today)
             got = [dict(date=d, triplet=t, **v) for d, v in sorted(rows.items())
                    if any(v.get(k) for k in ("swe", "prec", "tavg", "depth"))]
@@ -166,7 +169,7 @@ def soundings(today, status):
             q = urllib.parse.urlencode({
                 "station": SOUNDING, "sts": chunk.strftime("%Y-%m-%dT%H:%MZ"),
                 "ets": stop.strftime("%Y-%m-%dT%H:%MZ")})
-            text = http(f"{IEM}?{q}", timeout=300).decode()
+            text = http(f"{IEM}?{q}", timeout=120).decode()
             for r in csv.DictReader(text.splitlines()):
                 levels.append(r)
             chunk = stop

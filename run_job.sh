@@ -29,9 +29,9 @@ step () {   # step NAME command...
   return $rc
 }
 
-step FETCH python3 fetch_wx.py; rc=$?; [ $rc -ge 8 ] && exit 1
+step FETCH timeout 1200 python3 -u fetch_wx.py; rc=$?; [ $rc -ge 8 ] && exit 1
 step COMPILE gfortran -O2 -o cascadia-wx CASCADIA-WX.f90 || exit 1
-step CASCADWX ./cascadia-wx; rc=$?; [ $rc -ge 8 ] && exit 1
+step CASCADWX timeout 300 ./cascadia-wx; rc=$?; [ $rc -ge 8 ] && exit 1
 T=$(echo "$(date +%s.%N) - $START" | bc)
 printf "JOB CASCADWX   ENDED  MAXCC=%04d  %.1fs\n" "$MAXRC" "$T" >> "$LOG"
 exit 0

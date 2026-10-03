@@ -1,582 +1,541 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CASCADIA-WX // PNW Mountain Weather Analysis</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --amber: #ffb300;
-      --amber-dim: #b37800;
-      --amber-glow: rgba(255,179,0,0.15);
-      --amber-faint: rgba(255,179,0,0.05);
-      --blue: #4fc3f7;
-      --red: #ff5252;
-      --green: #69f0ae;
-      --bg: #0d0900;
-    }
-
-    * { margin:0; padding:0; box-sizing:border-box; }
-
-    html, body {
-      background: var(--bg);
-      color: var(--amber);
-      font-family: 'Share Tech Mono', monospace;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background: repeating-linear-gradient(
-        to bottom, transparent 0px, transparent 2px,
-        rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px
-      );
-      pointer-events: none; z-index: 1000;
-    }
-
-    body::after {
-      content: '';
-      position: fixed; inset: 0;
-      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
-      pointer-events: none; z-index: 999;
-    }
-
-    @keyframes flicker { 0%,88%,90%,92%,100%{opacity:1} 89%,91%{opacity:.85} }
-    @keyframes blink   { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-    @keyframes fadeUp  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes glow    { 0%,100%{text-shadow:0 0 8px var(--amber),0 0 20px var(--amber-dim)}
-                         50%{text-shadow:0 0 20px var(--amber),0 0 50px var(--amber-dim)} }
-    @keyframes spin    { to{transform:rotate(360deg)} }
-    @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.6} }
-
-    .container {
-      max-width: 1040px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 5rem;
-      animation: flicker 10s infinite;
-    }
-
-    /* ── HEADER ── */
-    .header {
-      border: 1px solid var(--amber-dim);
-      padding: 1.8rem 2rem 1.4rem;
-      margin-bottom: 2rem;
-      background: var(--amber-faint);
-      box-shadow: 0 0 40px var(--amber-glow);
-      animation: fadeUp .6s ease both;
-    }
-
-    .ascii-title {
-      font-family: 'VT323', monospace;
-      font-size: clamp(2.4rem, 5vw, 3.8rem);
-      line-height: 1;
-      animation: glow 5s ease-in-out infinite;
-      letter-spacing: .06em;
-    }
-
-    .header-tagline {
-      font-size: .76rem;
-      color: var(--amber-dim);
-      margin-top: .5rem;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-    }
-
-    .status-bar {
-      display: flex; flex-wrap: wrap; gap: 1.5rem;
-      margin-top: 1.2rem; padding-top: 1rem;
-      border-top: 1px solid #3a2800;
-      font-size: .73rem;
-    }
-
-    .s-item { color: var(--amber-dim); }
-    .s-item .v { color: var(--amber); }
-    .s-item .v.alert { color: var(--red); }
-    .s-item .v.good  { color: var(--green); }
-
-    /* ── SECTIONS ── */
-    .section { margin-bottom: 1.8rem; animation: fadeUp .7s ease both; }
-    .section:nth-child(2){animation-delay:.05s}
-    .section:nth-child(3){animation-delay:.1s}
-    .section:nth-child(4){animation-delay:.15s}
-    .section:nth-child(5){animation-delay:.2s}
-
-    .section-label {
-      font-size: .66rem; color: var(--amber-dim);
-      letter-spacing: .2em; margin-bottom: .6rem; text-transform: uppercase;
-    }
-    .section-label::before { content: '▶ '; color: var(--amber); }
-
-    .panel {
-      border: 1px solid var(--amber-dim);
-      padding: 1.4rem;
-      background: var(--amber-faint);
-    }
-
-    /* ── LOADING ── */
-    .loading { text-align:center; padding:2rem; color:var(--amber-dim); font-size:.85rem; }
-    .spinner { display:inline-block; width:1em; height:1em;
-      border:2px solid var(--amber-dim); border-top-color:var(--amber);
-      border-radius:50%; animation:spin .8s linear infinite;
-      vertical-align:middle; margin-right:.5rem; }
-    .error-msg { color:var(--red); font-size:.8rem; padding:1rem;
-      border:1px solid var(--red); background:rgba(255,82,82,.05); }
-
-    /* ── STATS GRID ── */
-    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:1rem; }
-    .stat-card { border:1px solid var(--amber-dim); padding:1rem; background:#000;
-      text-align:center; transition:box-shadow .2s,border-color .2s; }
-    .stat-card:hover { box-shadow:0 0 20px var(--amber-glow); border-color:var(--amber); }
-    .stat-num { font-family:'VT323',monospace; font-size:2.4rem;
-      color:var(--amber); text-shadow:0 0 10px var(--amber);
-      display:block; line-height:1; }
-    .stat-num.good  { color:var(--green); text-shadow:0 0 10px var(--green); }
-    .stat-num.alert { color:var(--red);   text-shadow:0 0 10px var(--red); }
-    .stat-label { font-size:.63rem; color:var(--amber-dim);
-      letter-spacing:.1em; text-transform:uppercase; margin-top:.4rem; }
-
-    /* ── MASSIF CARDS ── */
-    .massif-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; }
-    .massif-card { border:1px solid var(--amber-dim); padding:1.2rem; background:#000; }
-    .massif-name { font-family:'VT323',monospace; font-size:1.6rem;
-      color:var(--amber); text-shadow:0 0 8px var(--amber); letter-spacing:.05em; }
-    .massif-stats { font-size:.74rem; color:var(--amber-dim); margin-top:.5rem; line-height:1.8; }
-    .massif-stats span { color:var(--amber); }
-    .massif-badge { display:inline-block; padding:.1rem .5rem;
-      font-size:.62rem; margin-top:.4rem; border:1px solid; }
-    .badge-high { border-color:var(--blue);  color:var(--blue); }
-    .badge-norm { border-color:var(--amber-dim); color:var(--amber-dim); }
-    .badge-low  { border-color:var(--red);   color:var(--red); }
-
-    /* ── STATION TABLE ── */
-    .tbl { width:100%; border-collapse:collapse; font-size:.7rem; }
-    .tbl th { color:var(--amber-dim); text-align:left; padding:.3rem .6rem;
-      border-bottom:1px solid var(--amber-dim); font-weight:normal;
-      letter-spacing:.08em; font-size:.6rem; white-space:nowrap; }
-    .tbl td { padding:.45rem .6rem; border-bottom:1px solid #1a1000;
-      color:var(--amber); white-space:nowrap; }
-    .tbl tr:hover td { background:rgba(255,179,0,.04); }
-
-    .phase-snow  { color:var(--blue); }
-    .phase-rain  { color:var(--red); }
-    .phase-mixed { color:var(--amber); }
-    .swe-high  { color:var(--blue); }
-    .swe-low   { color:var(--red); }
-    .swe-norm  { color:var(--green); }
-
-    /* ── ATMOS PANEL ── */
-    .atmos-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
-    @media(max-width:600px) { .atmos-grid { grid-template-columns:1fr; } }
-    .atmos-item { font-size:.8rem; line-height:2; color:var(--amber-dim); }
-    .atmos-item .label { font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; }
-    .atmos-item .value { font-family:'VT323',monospace; font-size:1.4rem;
-      color:var(--amber); display:block; }
-    .atmos-item .value.big { font-size:1.8rem; }
-
-    /* ── AR METER ── */
-    .ar-bar-container { margin-top:.8rem; }
-    .ar-bar-track { height:8px; background:#1a1000;
-      border:1px solid var(--amber-dim); border-radius:4px; overflow:hidden; }
-    .ar-bar-fill  { height:100%; background:var(--amber);
-      transition:width .8s ease; border-radius:4px; }
-    .ar-labels    { display:flex; justify-content:space-between;
-      font-size:.6rem; color:var(--amber-dim); margin-top:.3rem; }
-
-    /* ── SPARKLINES ── */
-    .spark-row { display:flex; align-items:center; gap:.8rem;
-      padding:.4rem 0; border-bottom:1px solid #1a1000; font-size:.7rem; }
-    .spark-row:last-child { border-bottom:none; }
-    .spark-name { width:200px; flex-shrink:0; color:var(--amber-dim);
-      overflow:hidden; text-overflow:ellipsis; }
-    .spark-canvas { flex:1; height:28px; }
-    .spark-val { width:70px; text-align:right; flex-shrink:0; }
-
-    /* ── CODE BLOCK ── */
-    .code-block { background:#000; border:1px solid #1a1000;
-      padding:1rem 1.2rem; font-size:.74rem; line-height:1.85;
-      color:var(--amber); overflow-x:auto; }
-    .code-block .p   { color:var(--amber-dim); }
-    .code-block .c   { color:#3a2800; }
-    .code-block .cmd { color:#ffcc00; }
-
-    /* ── DESC ── */
-    .desc { font-size:.82rem; line-height:1.9; color:var(--amber-dim); }
-    .desc p { margin-bottom:.7rem; }
-    .desc strong { color:var(--amber); }
-    .desc a { color:var(--amber); text-decoration:none; }
-    .desc a:hover { text-shadow:0 0 8px var(--amber); }
-
-    /* ── FOOTER ── */
-    .footer { margin-top:3rem; padding-top:1.5rem;
-      border-top:1px solid #1a1000; font-size:.68rem;
-      color:var(--amber-dim); text-align:center; letter-spacing:.1em; line-height:2; }
-    .footer a { color:var(--amber-dim); text-decoration:none; }
-    .footer a:hover { color:var(--amber); }
-
-    .cursor { display:inline-block; width:.55em; height:1em;
-      background:var(--amber); animation:blink 1s step-end infinite;
-      vertical-align:text-bottom; margin-left:2px; }
-
-    hr.div { border:none; border-top:1px solid #1a1000; margin:2rem 0; }
-
-    ::-webkit-scrollbar { width:5px; height:5px; }
-    ::-webkit-scrollbar-track { background:#000; }
-    ::-webkit-scrollbar-thumb { background:var(--amber-dim); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CASCADIA-WX · Mountain Weather in FORTRAN</title>
+<meta name="description" content="Snowpack on Rainier, the Olympics and the Cascades, and the Quillayute weather balloon, analysed every day by a FORTRAN program.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#0d0900; --panel:#140e02; --line:#3a2800; --line2:#241900;
+  --amber:#ffb300; --amber2:#c58600; --dim:#a07a30; --faint:#6e5420;
+  --text:#f2d9a6; --muted:#b89a66;
+  --s1:#c58600; --s2:#2f96c4; --s3:#38a870;
+  --red:#ff6b5b; --green:#69f0ae; --blue:#4fc3f7;
+  --paper:#f4f1e4; --paper-ink:#25303a; --paper-rule:#9fb7c9; --paper-red:#c0392b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:15px;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:900;
+  background:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(0,0,0,.18) 2px 4px)}
+a{color:var(--amber)}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 80px}
+h1{font-family:'VT323',monospace;font-weight:400;font-size:clamp(3rem,9vw,5.4rem);line-height:.9;color:var(--amber);
+  text-shadow:0 0 14px rgba(255,179,0,.55),0 0 40px rgba(255,140,0,.25);letter-spacing:.04em}
+.tag{color:var(--muted);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;margin-top:.4rem}
+.lede{max-width:760px;margin:1.2rem 0 0;color:var(--text)}
+.status{display:flex;flex-wrap:wrap;gap:.4rem 1.6rem;margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.78rem;color:var(--muted)}
+.status b{color:var(--amber);font-weight:500}
+.rc{padding:.05rem .45rem;border:1px solid currentColor}
+.rc0{color:var(--green)} .rc4{color:var(--amber)} .rc8{color:var(--red)}
+section{margin-top:2.6rem}
+h2{font-family:'VT323',monospace;font-weight:400;font-size:2rem;color:var(--amber);letter-spacing:.05em;line-height:1}
+h2 small{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--dim);letter-spacing:.16em;margin-left:.6rem;text-transform:uppercase}
+.sub{color:var(--muted);font-size:.86rem;max-width:780px;margin:.5rem 0 1rem}
+.panel{border:1px solid var(--line);background:var(--panel);padding:16px}
+/* console */
+.console{background:#000;border:1px solid var(--line);padding:14px 16px;font-size:.74rem;line-height:1.5;color:var(--amber);
+  height:330px;overflow:auto;white-space:pre;box-shadow:inset 0 0 40px rgba(255,160,0,.08)}
+.console .ok{color:var(--green)} .console .w{color:#ffd166} .console .e{color:var(--red)} .console .d{color:var(--faint)}
+.cursor{display:inline-block;width:.6em;height:1em;background:var(--amber);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tile{border:1px solid var(--line);background:#000;padding:14px 16px}
+.tile .k{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.tile .v{font-family:'VT323',monospace;font-size:2.7rem;line-height:1;color:var(--amber);margin:.35rem 0 .1rem;text-shadow:0 0 10px rgba(255,179,0,.35);white-space:nowrap}
+.tile .u{font-size:.72rem;color:var(--muted);letter-spacing:.06em;min-height:1.1em;margin-bottom:.3rem}
+.tile .n{font-size:.74rem;color:var(--muted);line-height:1.45}
+/* charts */
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:'IBM Plex Mono',monospace;fill:var(--muted);font-size:11px}
+.grid line{stroke:var(--line2);stroke-width:1}
+.axis line,.axis path{stroke:var(--line)}
+.tip{position:absolute;pointer-events:none;background:#000;border:1px solid var(--amber2);padding:6px 9px;font-size:.72rem;
+  color:var(--text);white-space:nowrap;display:none;z-index:5;line-height:1.45}
+.legend{display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;font-size:.74rem;color:var(--muted);margin:.2rem 0 .6rem}
+.legend i{display:inline-block;width:18px;height:2px;vertical-align:middle;margin-right:6px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--faint) 0 4px,transparent 4px 7px)!important;height:2px}
+.two{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+.facts{font-size:.8rem;line-height:1.9}
+.facts div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line2);gap:1rem}
+.facts span:last-child{color:var(--amber);text-align:right}
+.toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.toggle button{background:#000;color:var(--muted);border:1px solid var(--line);font:inherit;font-size:.72rem;padding:.25rem .7rem;cursor:pointer;letter-spacing:.08em}
+.toggle button[aria-pressed=true]{color:#000;background:var(--amber2);border-color:var(--amber2)}
+/* small multiples */
+.sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.sm .cell{border:1px solid var(--line);background:#000;padding:10px 10px 4px}
+.sm .h{display:flex;justify-content:space-between;font-size:.74rem;gap:.5rem}
+.sm .h b{color:var(--text);font-weight:500}
+.sm .h span{color:var(--muted)}
+.massifs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+/* tables */
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.76rem}
+th{color:var(--dim);font-weight:400;text-align:right;padding:.35rem .5rem;border-bottom:1px solid var(--line);white-space:nowrap;font-size:.68rem;letter-spacing:.06em}
+td{padding:.35rem .5rem;border-bottom:1px solid var(--line2);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+td.hi{color:var(--amber)}
+/* map */
+#map{height:420px;border:1px solid var(--line);background:#000}
+.leaflet-container{font-family:'IBM Plex Mono',monospace}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#000;color:var(--text);border:1px solid var(--amber2)}
+/* printout */
+.printout{background:#fbf7e9;color:#1d2a20;font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.5;
+  padding:22px 0;overflow-x:auto;border-left:18px solid #fbf7e9;border-right:18px solid #fbf7e9;position:relative;
+  background-image:repeating-linear-gradient(to bottom,#e3eedc 0 31.5px,#fbf7e9 31.5px 63px);background-attachment:local;
+  box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.printout pre{white-space:pre;padding:0 26px;min-width:max-content}
+.holes{position:absolute;top:0;bottom:0;width:18px;background:radial-gradient(circle at 9px 15px,#0d0900 4.5px,transparent 5px) 0 0/18px 30px repeat-y}
+.holes.l{left:-18px}.holes.r{right:-18px}
+/* coding form */
+.form{background:var(--paper);color:var(--paper-ink);overflow-x:auto;padding:18px 18px 22px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.form .ttl{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.08em;color:var(--paper-ink);border-bottom:2px solid var(--paper-ink);padding-bottom:6px;margin-bottom:6px;min-width:860px}
+.form .ttl b{font-size:.95rem}
+.sheet{font-family:'IBM Plex Mono',monospace;font-size:12.5px;min-width:860px}
+.sheet .row{display:grid;grid-template-columns:repeat(80,10.75px);height:22px;align-items:end;border-bottom:1px solid var(--paper-rule)}
+.sheet .row span{text-align:center;color:#1f3d8a;font-family:'IBM Plex Mono',monospace;font-weight:500}
+.sheet .row span.c1{border-left:1px solid var(--paper-red)}
+.sheet .hdr span{font-size:8px;color:var(--paper-ink)}
+.sheet .row .b5,.sheet .row .b6,.sheet .row .b72{border-right:1px solid var(--paper-ink)}
+.sheet .row .id{color:#7d8a96}
+.form .cap{font-size:.72rem;color:#4b5763;margin-top:10px;min-width:860px}
+.notes{font-size:.86rem;max-width:820px}
+.notes p{margin:.0 0 .9rem}
+.notes strong{color:var(--amber);font-weight:500}
+footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.74rem;color:var(--dim);text-align:center;line-height:2}
+footer a{color:var(--dim)}
+.err{color:var(--red);font-size:.8rem}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+</style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="ascii-title">CASCADIA&#8209;WX</div>
-    <div class="header-tagline">
-      Pacific Northwest Mountain Weather Analysis &nbsp;·&nbsp; FORTRAN &nbsp;·&nbsp;
-      Rainier &nbsp;·&nbsp; Olympics &nbsp;·&nbsp; Cascades
-    </div>
-    <div class="status-bar">
-      <div class="s-item">LANGUAGE: <span class="v">GFortran 13</span></div>
-      <div class="s-item">STATIONS: <span class="v" id="hdr-stations">—</span></div>
-      <div class="s-item">DATA DATE: <span class="v" id="hdr-date">—</span></div>
-      <div class="s-item">SNOW LEVEL: <span class="v" id="hdr-snolvl">—</span></div>
-      <div class="s-item">REGION SWE: <span class="v" id="hdr-swe">—</span></div>
-      <div class="s-item">PAGE LOADED: <span class="v" id="hdr-loaded">—</span></div>
-      <div class="s-item">STATUS: <span class="v" id="hdr-status">LOADING...</span><span class="cursor"></span></div>
-    </div>
+<header>
+  <h1>CASCADIA-WX</h1>
+  <div class="tag">Mountain weather in FORTRAN · Rainier · Olympics · Cascades</div>
+  <p class="lede">Twelve snow stations and one weather balloon, read twice a day by a FORTRAN program. It works out how much snow is on the mountains against normal, how high it's freezing, and whether an atmospheric river is coming ashore.</p>
+  <div class="status" id="status">
+    <div>DATA <b id="st-date">—</b></div>
+    <div>BALLOON <b id="st-ball">—</b></div>
+    <div>LAST RUN <b id="st-run">—</b></div>
+    <div>STATIONS <b id="st-stn">—</b></div>
+    <div>RETURN CODE <b id="st-rc" class="rc">—</b></div>
   </div>
+</header>
 
-  <!-- STATS -->
-  <div class="section">
-    <div class="section-label">Run Statistics</div>
-    <div class="stats-grid" id="stats-grid">
-      <div class="loading"><span class="spinner"></span> Fetching SNOTEL data...</div>
-    </div>
-  </div>
+<section>
+  <h2>The job <small>job-log.txt · last run</small></h2>
+  <p class="sub">Every run is a batch job, like a mainframe: Python fetches the data, GFortran compiles the program, the program runs and sets a return code. 0 is normal; 4 means a station or the balloon was missing and the report says which.</p>
+  <div class="console" id="console" aria-label="Job log"><span class="d">LOADING job-log.txt…</span></div>
+</section>
 
-  <!-- MASSIF SUMMARY -->
-  <div class="section">
-    <div class="section-label">Mountain Massif Snowpack Summary</div>
-    <div class="massif-grid" id="massif-grid">
-      <div class="loading"><span class="spinner"></span> Loading...</div>
-    </div>
-  </div>
+<section>
+  <h2>Right now <small>from summary.csv</small></h2>
+  <div class="tiles" id="tiles"></div>
+</section>
 
-  <!-- ATMOSPHERIC ANALYSIS -->
-  <div class="section">
-    <div class="section-label">Section IV — Atmospheric Analysis</div>
-    <div class="panel" id="atmos-panel">
-      <div class="loading"><span class="spinner"></span> Loading...</div>
-    </div>
-  </div>
-
-  <!-- SWE SPARKLINES -->
-  <div class="section">
-    <div class="section-label">Station Snowpack — Current SWE (inches)</div>
-    <div class="panel" id="swe-bars">
-      <div class="loading"><span class="spinner"></span> Loading...</div>
-    </div>
-  </div>
-
-  <!-- STATION TABLE -->
-  <div class="section">
-    <div class="section-label">Section I — Full Station Analysis</div>
-    <div class="panel" style="overflow-x:auto">
-      <div id="station-table">
-        <div class="loading"><span class="spinner"></span> Loading...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BUILD & RUN -->
-  <div class="section">
-    <div class="section-label">Build &amp; Run</div>
+<section>
+  <h2>The balloon <small>Quillayute, WA · KUIL</small></h2>
+  <p class="sub">Twice a day the National Weather Service launches a radiosonde from Quillayute on the Washington coast. FORTRAN reads every level it reports, works out the wet-bulb temperature and the water vapour at each one, and finds where the air crosses freezing. The dashes on the left are the SNOTEL stations' elevations.</p>
+  <div class="two">
     <div class="panel">
-      <div class="code-block">
-<span class="c"># Install GFortran</span>
-<span class="p">$</span> <span class="cmd">sudo apt install gfortran</span>            <span class="c"># Ubuntu / WSL</span>
-<span class="p">$</span> <span class="cmd">brew install gcc</span>                    <span class="c"># macOS</span>
-
-<span class="c"># Fetch live NRCS SNOTEL + NOAA surface data</span>
-<span class="p">$</span> <span class="cmd">python3 fetch_wx.py</span>
-
-<span class="c"># Compile and run</span>
-<span class="p">$</span> <span class="cmd">gfortran -O2 -o cascadia-wx CASCADIA-WX.f90 -lm</span>
-<span class="p">$</span> <span class="cmd">./cascadia-wx</span>
-<span class="p">$</span> <span class="cmd">cat cascadia-wx-report.txt</span>
-
-<span class="c"># GitHub Actions runs this automatically every morning at 8AM Pacific</span></div>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Temperature</span><span><i style="background:var(--s3)"></i>Wet-bulb</span><span><i style="background:var(--s2)"></i>Dew point</span></div>
+      <div class="chart" id="profile"></div>
     </div>
-  </div>
-
-  <!-- ABOUT -->
-  <div class="section">
-    <div class="section-label">About</div>
     <div class="panel">
-      <div class="desc">
-        <p><strong>FORTRAN was invented in 1957. The first serious numerical weather prediction runs were done in FORTRAN on early IBM mainframes in the 1950s.</strong> The National Weather Service still runs FORTRAN. NCAR runs FORTRAN. Most global climate models are FORTRAN. It is the language the atmosphere was computed in, and it still is.</p>
-        <p>CASCADIA-WX reads live NRCS SNOTEL snowpack data from 11 stations across Rainier, the Olympics, and the Cascades, combines it with NOAA surface temperatures at valley airports, and computes environmental lapse rates, snow levels, precipitation phase partitioning, degree days, atmospheric river index, and storm classification — all in FORTRAN. The sister project to <a href="https://bdgroves.github.io/sierra-flow-cobol">SIERRA-FLOW</a>, which does the same for Sierra Nevada streamflow in COBOL.</p>
-        <p>This page reads <code>analysis.csv</code> — written by FORTRAN — and renders everything live. Updated every morning at 8AM Pacific via GitHub Actions.</p>
-      </div>
+      <div class="facts" id="ua-facts"></div>
+      <p class="sub" style="margin-top:1rem;font-size:.76rem">Snow level is estimated 1,000 ft below the freezing level, the National Weather Service's rule of thumb. IVT, integrated vapour transport, is the water vapour carried sideways through the column, surface to 300 hPa. At 250 kg/m/s or more it's atmospheric-river strength (Ralph and others, 2019).</p>
     </div>
   </div>
+</section>
 
-  <!-- RELATED -->
-  <div class="section">
-    <div class="section-label">Related Projects</div>
-    <div class="panel">
-      <div class="desc">
-        <p><strong><a href="https://bdgroves.github.io/sierra-flow-cobol">SIERRA-FLOW</a></strong> — The COBOL sister project. Live USGS streamflow for 8 Sierra Nevada gages. Daily GitHub Actions.</p>
-        <p><strong><a href="https://bdgroves.github.io/sierra-streamflow">Sierra Streamflow Monitor</a></strong> — 20-year spaghetti charts, Leaflet map, Tuolumne/Merced/Stanislaus.</p>
-        <p><strong><a href="https://bdgroves.github.io/EDGAR">EDGAR</a></strong> — Mariners/Rainiers baseball analytics. Nightly updates.</p>
-        <p><strong><a href="https://brooksgroves.com">brooksgroves.com</a></strong> — Project hub.</p>
-      </div>
-    </div>
+<section>
+  <h2>Every balloon <small>sounding_series.csv</small></h2>
+  <p class="sub">The freezing level and the vapour transport from every sounding FORTRAN has on file, two water years. The spikes in IVT are the atmospheric rivers; when they hit, the freezing level usually jumps too.</p>
+  <div class="toggle" id="ser-range" role="group" aria-label="Time range">
+    <button data-d="45" aria-pressed="true">45 days</button>
+    <button data-d="365">1 year</button>
+    <button data-d="0">All</button>
   </div>
-
-  <hr class="div">
-  <div class="footer">
-    <div><a href="https://github.com/bdgroves/cascadia-wx">github.com/bdgroves/cascadia-wx</a> &nbsp;·&nbsp; <a href="https://brooksgroves.com">brooksgroves.com</a></div>
-    <div style="margin-top:.4rem;color:#3a2800;">
-      FORTRAN · NUMERICAL WEATHER PREDICTION SINCE 1954 · NORMAL TERMINATION · RETURN CODE: 0
-    </div>
+  <div class="panel">
+    <div class="legend"><span><i style="background:var(--s1)"></i>Freezing level, ft</span><span><i class="dash"></i>SNOTEL stations, 3,050–5,810 ft</span></div>
+    <div class="chart" id="fl"></div>
+    <div class="legend" style="margin-top:1rem"><span><i style="background:var(--s2)"></i>IVT, kg/m/s</span><span><i class="dash"></i>250: atmospheric-river strength</span></div>
+    <div class="chart" id="ivt"></div>
   </div>
+</section>
 
+<section>
+  <h2>The snowpack <small>NRCS SNOTEL · against 1991–2020 medians</small></h2>
+  <p class="sub" id="snow-sub">Snow water equivalent (SWE) is the depth of water you'd get if you melted the snowpack. Each station is drawn against its own median for that day of the year.</p>
+  <div class="massifs" id="massifs"></div>
+  <div class="legend"><span><i style="background:var(--s1)"></i>This water year</span><span><i style="background:var(--s2)"></i>Last water year</span><span><i class="dash"></i>Median, 1991–2020</span></div>
+  <div class="sm" id="sm"></div>
+</section>
+
+<section>
+  <h2>Last water year <small>review.csv</small></h2>
+  <p class="sub" id="rev-sub"></p>
+  <div class="panel tbl-wrap"><table id="review"></table></div>
+</section>
+
+<section>
+  <h2>The stations</h2>
+  <div id="map" role="img" aria-label="Map of the SNOTEL stations and the Quillayute balloon site"></div>
+</section>
+
+<section>
+  <h2>The printout <small>cascadia-wx-report.txt · 132 columns</small></h2>
+  <p class="sub">What FORTRAN writes, exactly as written, on green-bar paper.</p>
+  <div style="position:relative;margin:0 18px">
+    <div class="holes l"></div><div class="holes r"></div>
+    <div class="printout"><pre id="report">Loading…</pre></div>
+  </div>
+</section>
+
+<section>
+  <h2>The source <small>on a FORTRAN coding form</small></h2>
+  <p class="sub">The loop that integrates water vapour up the balloon's column, copied live from <a href="https://github.com/bdgroves/cascadia-wx/blob/main/CASCADIA-WX.f90">CASCADIA-WX.f90</a>. On the 1957 form, columns 1–5 held a statement number, 6 marked a continued line, 7–72 the statement and 73–80 the card's ID. This is modern free-form FORTRAN, so it doesn't follow those columns, but the whole program keeps to the form's 72-column width and fits.</p>
+  <div class="form">
+    <div class="ttl"><b>FORTRAN CODING FORM</b><span>PROGRAM CASCADIA-WX · ROUTINE ANALYSE · PROGRAMMER B. GROVES</span><span id="form-date"></span></div>
+    <div class="sheet" id="sheet"></div>
+    <div class="cap">IVT = (1/g) ∫ q·V dp, surface to 300 hPa, by the trapezoid rule. q is specific humidity from the dew point; V is the wind.</div>
+  </div>
+</section>
+
+<section>
+  <h2>About</h2>
+  <div class="notes">
+    <p><strong>Why FORTRAN.</strong> It was the first language built for scientists, in 1957, and the atmosphere has been computed in it ever since. The National Weather Service's models, NCAR's climate model, ECMWF's forecasts and the WRF model are all FORTRAN. This is a much smaller program in the same tradition: it reads data, applies physics and prints a report. It is the sister project of <a href="https://brooksgroves.com/sierra-flow-cobol/">SIERRA-FLOW</a>, which does Sierra Nevada rivers in COBOL.</p>
+    <p><strong>What's real.</strong> Every number on this page is read from a file FORTRAN wrote. The page draws charts; it does not calculate. Snow and precipitation come from the NRCS SNOTEL network with NRCS's own 1991–2020 medians. The balloon data are the National Weather Service's radiosonde reports, from the Iowa Environmental Mesonet archive. When a source is down, the job says so with return code 4 and keeps the last good data instead of filling in numbers.</p>
+    <p><strong>Corrected in October 2026.</strong> The first version, from April, asked NRCS for three stations that don't exist (Snoqualmie, Stevens and Stampede passes) and quietly filled in zero snow when it got nothing back. It also compared every day against made-up April 1 normals, and its "atmospheric river index" was a formula of snow level and snowpack, not a measurement. So the April reading that the passes were bare and the Cascades were at 15% of normal was wrong. NRCS's own numbers show the Snoqualmie Pass station holding about 25 inches of water that week, close to half of normal. Version 2 fixes all of this. <a href="https://brooksgroves.com/blog/cascadia-wx-revisited-post.html">The write-up</a> explains it.</p>
+    <p><strong>Limits.</strong> One balloon at one moment is a sample, not a forecast. The official atmospheric-river scale also weighs how long the river lasts. SNOTEL air temperatures carry a known sensor bias, which NRCS is working on. Snow level is a rule of thumb. Percent of median isn't shown until the median itself reaches an inch, because early-season percentages are meaningless.</p>
+  </div>
+</section>
+
+<footer>
+  <div><a href="https://github.com/bdgroves/cascadia-wx">github.com/bdgroves/cascadia-wx</a> · <a href="https://brooksgroves.com/meteorology.html">More weather projects</a> · <a href="https://brooksgroves.com">brooksgroves.com</a></div>
+  <div>Data: <a href="https://www.nrcs.usda.gov/resources/data-and-reports/snow-and-climate-monitoring-predefined-reports-and-maps">NRCS SNOTEL</a> · NWS radiosondes via the <a href="https://mesonet.agron.iastate.edu/archive/raob/">Iowa Environmental Mesonet</a> · Map © OpenStreetMap, © CARTO</div>
+</footer>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-// ── PARSE ANALYSIS CSV ────────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim());
-  return lines.slice(1).map(line => {
-    const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = vals[i] || '');
-    return obj;
-  }).filter(r => r.station_id);
+const $ = s => document.querySelector(s);
+const bust = '?v=' + Math.floor(Date.now() / 600000);
+const NS = 'http://www.w3.org/2000/svg';
+const C = {s1:'#c58600', s2:'#2f96c4', s3:'#38a870', faint:'#6e5420', grid:'#241900', line:'#3a2800', muted:'#b89a66', amber:'#ffb300'};
+
+async function text(f){ const r = await fetch(f + bust); if(!r.ok) throw new Error(f + ' ' + r.status); return r.text(); }
+function csv(t){
+  const L = t.trim().split(/\r?\n/), h = L[0].split(',');
+  return L.slice(1).map(l => { const v = l.split(','), o = {}; h.forEach((k,i) => o[k] = v[i] ?? ''); return o; });
+}
+const num = v => v === '' || v == null ? null : +v;
+const fmt = (v, d=0) => v == null || isNaN(v) ? '—' : (+v).toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function el(tag, attrs={}, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const dlabel = d => `${months[d.getUTCMonth()]} ${d.getUTCDate()}`;
+const iso = s => new Date(s.length === 10 ? s + 'T00:00:00Z' : s);
+function niceTicks(lo, hi, n){
+  const span = hi - lo, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1,2,2.5,5,10].map(m => m*mag).find(s => s >= step0) || 10*mag;
+  const out = []; for (let v = Math.ceil(lo/step)*step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6)); return out;
 }
 
-// ── MASSIF GROUPING ───────────────────────────────────────────────────
-function groupByMassif(stations) {
-  const massifs = {};
-  for (const s of stations) {
-    const m = s.massif || 'OTHER';
-    if (!massifs[m]) massifs[m] = [];
-    massifs[m].push(s);
+/* ── tooltip helper ─────────────────────────────────────────── */
+function tipFor(box){ let t = box.querySelector('.tip'); if (!t){ t = document.createElement('div'); t.className = 'tip'; box.appendChild(t); } return t; }
+function showTip(box, html, x, y){
+  const t = tipFor(box); t.innerHTML = html; t.style.display = 'block';
+  const bw = box.clientWidth, tw = t.offsetWidth;
+  t.style.left = Math.min(Math.max(0, x + 12), bw - tw) + 'px'; t.style.top = (y - 10) + 'px';
+}
+const hideTip = box => { const t = box.querySelector('.tip'); if (t) t.style.display = 'none'; };
+
+/* ── time-series line chart ─────────────────────────────────── */
+function lineChart(box, series, opt){
+  box.innerHTML = '';
+  const W = box.clientWidth || 700, H = opt.h || 220, m = {l:58, r:14, t:10, b:26};
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img', 'aria-label':opt.label}, box);
+  const all = series.flatMap(s => s.pts);
+  if (!all.length){ const t = el('text', {x:W/2, y:H/2, 'text-anchor':'middle'}, svg); t.textContent = 'No data yet'; return; }
+  const x0 = opt.x0 ?? Math.min(...all.map(p => p.x)), x1 = opt.x1 ?? Math.max(...all.map(p => p.x));
+  const ys = all.map(p => p.y).concat(opt.refs ? opt.refs.map(r => r.y) : []);
+  let y0 = opt.y0 ?? Math.min(...ys), y1 = opt.y1 ?? Math.max(...ys);
+  if (y1 === y0) y1 = y0 + 1;
+  const X = v => m.l + (v - x0) / (x1 - x0 || 1) * (W - m.l - m.r);
+  const Y = v => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
+  const g = el('g', {class:'grid'}, svg);
+  for (const v of niceTicks(y0, y1, 4)){
+    el('line', {x1:m.l, x2:W-m.r, y1:Y(v), y2:Y(v)}, g);
+    const t = el('text', {x:m.l-8, y:Y(v)+4, 'text-anchor':'end'}, svg); t.textContent = opt.yfmt ? opt.yfmt(v) : fmt(v);
   }
-  return massifs;
+  // x ticks: month starts
+  const span = (x1 - x0) / 864e5, pxPerMonth = (W - m.l - m.r) / (span / 30.4);
+  const every = span > 120 ? (pxPerMonth < 30 ? 3 : pxPerMonth < 45 ? 2 : 1) * (span > 400 ? 3 : 1) : 0;
+  if (every){
+    const d = new Date(x0); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth()+1);
+    for (; d.getTime() <= x1; d.setUTCMonth(d.getUTCMonth()+every)){
+      const t = el('text', {x:X(d.getTime()), y:H-6, 'text-anchor':'middle'}, svg);
+      t.textContent = months[d.getUTCMonth()] + (d.getUTCMonth()===0 ? " '" + String(d.getUTCFullYear()).slice(2) : '');
+    }
+  } else {
+    const step = Math.max(1, Math.round(span / 6)) * 864e5;
+    for (let v = x0; v <= x1; v += step){ const t = el('text', {x:X(v), y:H-6, 'text-anchor':'middle'}, svg); t.textContent = dlabel(new Date(v)); }
+  }
+  for (const r of (opt.refs || [])) el('line', {x1:m.l, x2:W-m.r, y1:Y(r.y), y2:Y(r.y), stroke:C.faint, 'stroke-width':1.5, 'stroke-dasharray':'4 3'}, svg);
+  if (opt.band) el('rect', {x:m.l, width:W-m.l-m.r, y:Y(opt.band[1]), height:Y(opt.band[0])-Y(opt.band[1]), fill:'rgba(197,134,0,.08)'}, svg);
+  for (const s of series){
+    let d = '', pen = false, prev = null;
+    for (const p of s.pts){
+      const gap = prev && (p.x - prev.x) > (s.gap || 2.5*864e5);
+      d += (pen && !gap ? 'L' : 'M') + X(p.x).toFixed(1) + ',' + Y(p.y).toFixed(1); pen = true; prev = p;
+    }
+    el('path', {d, fill:'none', stroke:s.color, 'stroke-width':s.w || 2, 'stroke-dasharray':s.dash || '', 'stroke-linejoin':'round', 'stroke-linecap':'round'}, svg);
+  }
+  // hover
+  const cross = el('line', {y1:m.t, y2:H-m.b, stroke:C.muted, 'stroke-width':1, opacity:0}, svg);
+  const dots = series.map(s => el('circle', {r:4, fill:s.color, stroke:'#000', 'stroke-width':2, opacity:0}, svg));
+  const hit = el('rect', {x:m.l, y:0, width:W-m.l-m.r, height:H, fill:'transparent'}, svg);
+  hit.addEventListener('mousemove', ev => {
+    const r = svg.getBoundingClientRect(), sx = (ev.clientX - r.left) * W / r.width;
+    const xv = x0 + (sx - m.l) / (W - m.l - m.r) * (x1 - x0);
+    let rows = [], cx = null;
+    series.forEach((s, i) => {
+      let best = null; for (const p of s.pts) if (!best || Math.abs(p.x - xv) < Math.abs(best.x - xv)) best = p;
+      if (best && Math.abs(best.x - xv) < (opt.snap || 3*864e5)){
+        dots[i].setAttribute('cx', X(best.x)); dots[i].setAttribute('cy', Y(best.y)); dots[i].setAttribute('opacity', 1);
+        cx = X(best.x); rows.push(`<span style="color:${s.color}">■</span> ${s.name}: <b>${opt.tfmt ? opt.tfmt(best.y) : fmt(best.y)}</b>`);
+        if (!rows.head) rows.head = opt.xfmt ? opt.xfmt(best) : dlabel(new Date(best.x));
+      } else dots[i].setAttribute('opacity', 0);
+    });
+    if (cx == null){ hideTip(box); cross.setAttribute('opacity', 0); return; }
+    cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('opacity', .6);
+    showTip(box, `<div>${rows.head}</div>` + rows.join('<br>'), cx * r.width / W, ev.clientY - r.top);
+  });
+  hit.addEventListener('mouseleave', () => { hideTip(box); cross.setAttribute('opacity', 0); dots.forEach(d => d.setAttribute('opacity', 0)); });
 }
 
-// ── BADGE HTML ────────────────────────────────────────────────────────
-function sweBadge(pct) {
-  const p = parseFloat(pct);
-  if (p > 115) return '<span class="massif-badge badge-high">▲ ABOVE NORMAL</span>';
-  if (p <  85) return '<span class="massif-badge badge-low">▼ BELOW NORMAL</span>';
-  return '<span class="massif-badge badge-norm">NEAR NORMAL</span>';
+/* ── the balloon profile: temperature against height ─────────── */
+function profileChart(box, rows, elevs, fl){
+  box.innerHTML = '';
+  const W = box.clientWidth || 560, H = 470, m = {l:58, r:16, t:12, b:34};
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img', 'aria-label':'Temperature, wet-bulb and dew point against height from the latest Quillayute balloon'}, box);
+  const P = rows.map(r => ({z:num(r.z_m)*3.28084, t:num(r.t_c), td:num(r.td_c), tw:num(r.tw_c), p:num(r.p_hpa), dir:num(r.wind_from_deg), kt:num(r.wind_kt)}))
+                .filter(r => r.z != null && r.z <= 32000);
+  const z1 = 32000, tmin = -55, tmax = Math.max(25, ...P.map(r => r.t ?? 0)) ;
+  const X = v => m.l + (v - tmin) / (tmax - tmin) * (W - m.l - m.r);
+  const Y = v => H - m.b - v / z1 * (H - m.t - m.b);
+  const g = el('g', {class:'grid'}, svg);
+  for (let z = 0; z <= z1; z += 5000){
+    el('line', {x1:m.l, x2:W-m.r, y1:Y(z), y2:Y(z)}, g);
+    const t = el('text', {x:m.l-8, y:Y(z)+4, 'text-anchor':'end'}, svg); t.textContent = z ? (z/1000) + 'k ft' : '0';
+  }
+  for (let t = -50; t <= tmax; t += 10){
+    el('line', {x1:X(t), x2:X(t), y1:m.t, y2:H-m.b}, g);
+    const l = el('text', {x:X(t), y:H-m.b+16, 'text-anchor':'middle'}, svg); l.textContent = t + '°';
+  }
+  const lab = el('text', {x:W-m.r, y:H-4, 'text-anchor':'end'}, svg); lab.textContent = '°C';
+  el('line', {x1:X(0), x2:X(0), y1:m.t, y2:H-m.b, stroke:'#5b8db0', 'stroke-width':1.2, 'stroke-dasharray':'3 3'}, svg);
+  for (const e of elevs) el('line', {x1:m.l-6, x2:m.l+6, y1:Y(e), y2:Y(e), stroke:C.faint, 'stroke-width':2}, svg);
+  if (fl != null){
+    el('line', {x1:m.l, x2:W-m.r, y1:Y(fl), y2:Y(fl), stroke:C.amber, 'stroke-width':1, 'stroke-dasharray':'6 4', opacity:.7}, svg);
+    const t = el('text', {x:W-m.r-4, y:Y(fl)-6, 'text-anchor':'end', style:'fill:#ffb300'}, svg); t.textContent = 'freezing level ' + fmt(fl) + ' ft';
+  }
+  const path = (key, color) => {
+    let d = ''; for (const r of P) if (r[key] != null) d += (d ? 'L' : 'M') + X(r[key]).toFixed(1) + ',' + Y(r.z).toFixed(1);
+    el('path', {d, fill:'none', stroke:color, 'stroke-width':2, 'stroke-linejoin':'round'}, svg);
+  };
+  path('td', C.s2); path('tw', C.s3); path('t', C.s1);
+  const hl = el('line', {x1:m.l, x2:W-m.r, stroke:C.muted, opacity:0}, svg);
+  const hit = el('rect', {x:m.l, y:m.t, width:W-m.l-m.r, height:H-m.t-m.b, fill:'transparent'}, svg);
+  hit.addEventListener('mousemove', ev => {
+    const r = svg.getBoundingClientRect(), sy = (ev.clientY - r.top) * H / r.height;
+    const zv = (H - m.b - sy) / (H - m.t - m.b) * z1;
+    let best = null; for (const p of P) if (!best || Math.abs(p.z - zv) < Math.abs(best.z - zv)) best = p;
+    if (!best) return;
+    hl.setAttribute('y1', Y(best.z)); hl.setAttribute('y2', Y(best.z)); hl.setAttribute('opacity', .5);
+    showTip(box, `<div>${fmt(best.p,0)} hPa · ${fmt(best.z)} ft</div>
+      <span style="color:${C.s1}">■</span> Temperature <b>${fmt(best.t,1)} °C</b><br>
+      <span style="color:${C.s3}">■</span> Wet-bulb <b>${fmt(best.tw,1)} °C</b><br>
+      <span style="color:${C.s2}">■</span> Dew point <b>${fmt(best.td,1)} °C</b>` +
+      (best.kt != null ? `<br>Wind <b>${fmt(best.kt)} kt</b> from ${fmt(best.dir)}°` : ''), (ev.clientX - r.left), Y(best.z) * r.height / H);
+  });
+  hit.addEventListener('mouseleave', () => { hideTip(box); hl.setAttribute('opacity', 0); });
 }
 
-function phaseClass(frac) {
-  const f = parseFloat(frac);
-  if (f >= 0.8) return 'phase-snow';
-  if (f <= 0.2) return 'phase-rain';
-  return 'phase-mixed';
+/* ── job log console ─────────────────────────────────────────── */
+function typeLog(t){
+  const box = $('#console'); box.innerHTML = '';
+  const lines = t.replace(/\s+$/, '').split('\n');
+  const colour = l => /RC=0000|RC= 0$|MAXCC=0000/.test(l) ? 'ok' : /CWX\d{3}W|RC=0004|RC= 4$|MAXCC=0004|FAILED/.test(l) ? 'w' : /CWX\d{3}E|RC=00(08|12)|MAXCC=00(08|12)/.test(l) ? 'e' : '';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let i = 0;
+  const step = () => {
+    const n = reduce ? lines.length : Math.min(lines.length, i + 2);
+    for (; i < n; i++){ const s = document.createElement('span'); const c = colour(lines[i]); if (c) s.className = c; s.textContent = lines[i] + '\n'; box.appendChild(s); }
+    box.scrollTop = box.scrollHeight;
+    if (i < lines.length) setTimeout(step, 45); else { const c = document.createElement('span'); c.className = 'cursor'; box.appendChild(c); }
+  };
+  step();
 }
 
-function phaseLabel(frac) {
-  const f = parseFloat(frac);
-  if (f >= 0.8) return 'SNOW';
-  if (f <= 0.2) return 'RAIN';
-  return 'MIXED';
+/* ── FORTRAN coding form ─────────────────────────────────────── */
+function codingForm(src){
+  const L = src.split('\n');
+  const a = L.findIndex(l => l.includes('! integrate surface to 300 hPa'));
+  let b = a; if (a >= 0) for (b = a + 1; b < L.length; b++) if (/^\s{4}end if\s*$/.test(L[b])) break;
+  const lines = a >= 0 ? L.slice(a, b + 1) : ['      (source not found)'];
+  const sheet = $('#sheet');
+  const hdr = document.createElement('div'); hdr.className = 'row hdr';
+  for (let c = 1; c <= 80; c++){ const s = document.createElement('span'); s.textContent = [1,5,6,7,10,20,30,40,50,60,72,73,80].includes(c) ? c : ''; if ([5,6,72].includes(c)) s.className = 'b' + c; hdr.appendChild(s); }
+  sheet.appendChild(hdr);
+  lines.forEach((ln, k) => {
+    const row = document.createElement('div'); row.className = 'row';
+    const card = 'CWX' + String(a + k + 1).padStart(5, '0');
+    const text = ln.padEnd(72).slice(0, 72) + card;
+    for (let c = 0; c < 80; c++){
+      const s = document.createElement('span'); s.textContent = text[c] === ' ' ? '' : text[c];
+      const cls = []; if (c === 0) cls.push('c1'); if (c === 4) cls.push('b5'); if (c === 5) cls.push('b6'); if (c === 71) cls.push('b72'); if (c >= 72) cls.push('id');
+      s.className = cls.join(' '); row.appendChild(s);
+    }
+    sheet.appendChild(row);
+  });
 }
 
-function sweClass(pct) {
-  const p = parseFloat(pct);
-  if (p > 115) return 'swe-high';
-  if (p < 85)  return 'swe-low';
-  return 'swe-norm';
-}
+/* ── load everything ─────────────────────────────────────────── */
+(async function(){
+  const get = async f => { try { return await text(f); } catch(e){ console.warn(e); return null; } };
+  const [sumT, anT, maT, reT, uaT, seT, daT, stT, logT, repT, srcT] = await Promise.all(
+    ['summary.csv','analysis.csv','massif.csv','review.csv','upper_air.csv','sounding_series.csv','snotel_daily.csv','stations.csv','job-log.txt','cascadia-wx-report.txt','CASCADIA-WX.f90'].map(get));
+  if (!sumT){ $('#tiles').innerHTML = '<p class="err">Could not load summary.csv.</p>'; return; }
+  const S = Object.fromEntries(csv(sumT).map(r => [r.key, r.value]));
+  const A = anT ? csv(anT) : [], M = maT ? csv(maT) : [], R = reT ? csv(reT) : [];
+  const ST = stT ? csv(stT) : [];
 
-function fmt(n, d=1) {
-  const v = parseFloat(n);
-  if (isNaN(v)) return '—';
-  return v.toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
-}
+  // status bar
+  $('#st-date').textContent = S.data_date || '—';
+  $('#st-ball').textContent = S.sounding_valid_utc ? S.sounding_valid_utc.replace('T', ' ').replace(':00Z', 'Z') : '—';
+  $('#st-run').textContent = S.run_utc ? S.run_utc + ' UTC' : '—';
+  $('#st-stn').textContent = `${S.stations_reporting ?? '—'} of ${S.stations ?? '—'} reporting`;
+  const rc = +S.return_code; const rcEl = $('#st-rc'); rcEl.textContent = String(rc).padStart(2, '0') + (rc === 0 ? ' NORMAL' : rc === 4 ? ' WARNING' : ' ERROR'); rcEl.classList.add(rc === 0 ? 'rc0' : rc === 4 ? 'rc4' : 'rc8');
+  if (logT) typeLog(logT);
 
-// ── RENDER ────────────────────────────────────────────────────────────
-function render(stations) {
-  const massifs = groupByMassif(stations);
-  const now = new Date(), pad = n => String(n).padStart(2,'0');
+  // tiles
+  const swePct = num(S.region_swe_pct), prPct = num(S.region_precip_pct);
+  const tiles = [
+    ['Freezing level', fmt(num(S.freezing_level_ft)), 'ft', `Over Quillayute at ${S.sounding_valid_utc ? S.sounding_valid_utc.slice(11,16) : '—'} UTC. Snow level about ${fmt(num(S.snow_level_ft))} ft.`],
+    ['Atmospheric river', S.ar_category || '—', '', `Vapour transport ${fmt(num(S.ivt))} kg/m/s from the ${S.ivt_from || '—'}. Atmospheric-river strength starts at 250.`],
+    ['Snowpack', swePct == null ? '—' : fmt(swePct) , swePct == null ? '' : '% of median', swePct == null ? `Water year ${S.water_year} has just begun, and the median snowpack is still under an inch, so a percentage would mean nothing yet.` : `All ${S.stations_reporting} stations, sum of snow water over sum of medians: ${S.region_class.toLowerCase()}.`],
+    ['Water-year precipitation', prPct == null ? '—' : fmt(prPct), prPct == null ? '' : '% of median', prPct == null ? 'Too early in the water year for a percentage to mean anything.' : `Rain and snow since October 1, against the 1991–2020 median to date.`],
+    ['Last winter’s peak', S.last_wy_peak_pct ? fmt(num(S.last_wy_peak_pct)) : '—', S.last_wy_peak_pct ? '% of median' : '', `Water year ${+S.water_year - 1}: the stations’ peak snow water, summed, against their median peaks.`],
+  ];
+  $('#tiles').innerHTML = tiles.map(([k,v,u,n]) => `<div class="tile"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="u">${u}</div><div class="n">${n}</div></div>`).join('');
 
-  // Compute regional stats
-  const allSwe    = stations.map(s => parseFloat(s.swe_in) || 0);
-  const allSwePct = stations.map(s => parseFloat(s.swe_pct) || 0);
-  const allSnolvl = stations.map(s => parseFloat(s.snow_level_ft) || 0);
-  const avgSnolvl = allSnolvl.reduce((a,b)=>a+b,0) / allSnolvl.length;
-  const avgSwePct = allSwePct.reduce((a,b)=>a+b,0) / allSwePct.length;
-  const latestDate = stations[0]?.date || '—';
+  // upper air
+  const elevs = ST.map(s => +s.elev_ft);
+  if (uaT){ const U = csv(uaT); profileChart($('#profile'), U, elevs, num(S.freezing_level_ft)); window.addEventListener('resize', () => profileChart($('#profile'), U, elevs, num(S.freezing_level_ft))); }
+  const facts = [
+    ['Balloon', S.sounding_valid_utc ? S.sounding_valid_utc.replace('T',' ') : '—'],
+    ['Freezing level', fmt(num(S.freezing_level_ft)) + ' ft'],
+    ['Wet-bulb zero', fmt(num(S.wetbulb_zero_ft)) + ' ft'],
+    ['Snow level (estimate)', fmt(num(S.snow_level_ft)) + ' ft'],
+    ['Precipitable water', fmt(num(S.pw_mm),1) + ' mm'],
+    ['Vapour transport (IVT)', fmt(num(S.ivt)) + ' kg/m/s from the ' + (S.ivt_from || '—')],
+    ['Atmospheric river', S.ar_category || '—'],
+    ['850 hPa temperature', fmt(num(S.t850_c),1) + ' °C'],
+    ['Lapse rate, 850–700 hPa', fmt(num(S.free_air_lapse_c_km),1) + ' °C per km'],
+    ['Lapse rate, SNOTEL fit', S.mountain_lapse_c_km ? `${fmt(num(S.mountain_lapse_c_km),1)} °C per km (r² ${fmt(num(S.mountain_lapse_r2),2)})` : '—'],
+    ['700 hPa wind', (S.w700 || '—').replace(/^(\S+) (\d+) kt$/, '$2 kt from the $1')],
+  ];
+  $('#ua-facts').innerHTML = facts.map(([k,v]) => `<div><span>${k}</span><span>${esc(v)}</span></div>`).join('');
 
-  // Atmospheric River proxy
-  const arIndex = ((avgSnolvl - 3000) / 1000) + ((avgSwePct - 100) / 100);
-  const arPct   = Math.min(100, Math.max(0, (arIndex + 1) / 4 * 100));
-  let stormType = 'CUTOFF LOW / OTHER';
-  if (arIndex > 1.5) stormType = 'PINEAPPLE EXPRESS';
-  else if (arIndex < 0) stormType = 'GULF OF ALASKA';
+  // sounding series
+  if (seT){
+    const SE = csv(seT).map(r => ({x:iso(r.valid_utc).getTime(), fl:num(r.freezing_ft), ivt:num(r.ivt), cat:r.ar_category, pw:num(r.pw_mm), key:r.valid_utc}));
+    const draw = days => {
+      const last = Math.max(...SE.map(r => r.x)), from = days ? last - days*864e5 : Math.min(...SE.map(r => r.x));
+      const W = SE.filter(r => r.x >= from);
+      const xf = p => { const r = W.find(q => q.x === p.x); return r ? r.key.replace('T', ' ').replace(':00Z', 'Z') : ''; };
+      lineChart($('#fl'), [{name:'Freezing level', color:C.s1, pts:W.filter(r => r.fl != null).map(r => ({x:r.x, y:r.fl})), gap:1.6*864e5}],
+        {label:'Freezing level over Quillayute by sounding', y0:0, band:[3050, 5810], tfmt:v => fmt(v) + ' ft', yfmt:v => v ? (v/1000) + 'k' : '0', xfmt:xf, snap:1.5*864e5, x0:from, x1:last});
+      lineChart($('#ivt'), [{name:'IVT', color:C.s2, pts:W.filter(r => r.ivt != null).map(r => ({x:r.x, y:r.ivt})), gap:1.6*864e5}],
+        {label:'Integrated vapour transport by sounding', y0:0, refs:[{y:250}], tfmt:v => fmt(v) + ' kg/m/s', xfmt:p => xf(p) + ' · ' + (W.find(q => q.x === p.x)?.cat || ''), snap:1.5*864e5, x0:from, x1:last, h:200});
+    };
+    let cur = 45; draw(cur);
+    $('#ser-range').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+      document.querySelectorAll('#ser-range button').forEach(x => x.setAttribute('aria-pressed', x === b)); cur = +b.dataset.d; draw(cur); });
+    window.addEventListener('resize', () => draw(cur));
+  }
 
-  // Header
-  document.getElementById('hdr-stations').textContent = stations.length;
-  document.getElementById('hdr-date').textContent     = latestDate;
-  document.getElementById('hdr-snolvl').textContent   = fmt(avgSnolvl, 0) + ' ft';
-  document.getElementById('hdr-swe').textContent      = fmt(avgSwePct, 0) + '% normal';
-  document.getElementById('hdr-status').textContent   = 'NORMAL TERMINATION';
-  document.getElementById('hdr-loaded').textContent   =
-    `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  // massifs
+  $('#massifs').innerHTML = M.map(r => {
+    const pct = num(r.swe_pct), pp = num(r.wy_precip_pct);
+    return `<div class="tile"><div class="k">${r.massif === 'ALL' ? 'All stations' : r.massif[0] + r.massif.slice(1).toLowerCase()}</div>
+      <div class="v">${pct == null ? '—' : fmt(pct)}</div><div class="u">${pct == null ? 'season not started' : '% of median'}</div>
+      <div class="n">${r.class === 'SEASON NOT STARTED' ? '' : r.class[0] + r.class.slice(1).toLowerCase() + ' · '}${fmt(num(r.swe_in),1)} in of snow water at ${r.stations} station${r.stations === '1' ? '' : 's'}<br>
+      Last winter's peak: ${r.last_wy_peak_pct ? fmt(num(r.last_wy_peak_pct)) + '% of median' : '—'}${pp != null ? `<br>Precipitation ${fmt(pp)}% of median` : ''}</div></div>`;
+  }).join('');
 
-  // Stats grid
-  document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card">
-      <span class="stat-num">${stations.length}</span>
-      <div class="stat-label">SNOTEL Stations</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-num ${avgSwePct > 115 ? 'good' : avgSwePct < 85 ? 'alert' : ''}">
-        ${fmt(avgSwePct,0)}%
-      </span>
-      <div class="stat-label">Region SWE % Normal</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-num">${fmt(avgSnolvl,0)}</span>
-      <div class="stat-label">Avg Snow Level (ft)</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-num">${Object.keys(massifs).length}</span>
-      <div class="stat-label">Massifs Analyzed</div>
-    </div>`;
+  // small multiples
+  if (daT){
+    const D = csv(daT);
+    const wy = +S.water_year, cur0 = Date.UTC(wy-1, 9, 1), prev0 = Date.UTC(wy-2, 9, 1);
+    const by = {}; for (const r of D) (by[r.triplet] ||= []).push(r);
+    const sm = $('#sm'); sm.innerHTML = '';
+    const drawSM = () => {
+      sm.innerHTML = '';
+      for (const s of ST){
+        const rows = by[s.triplet] || [], a = A.find(x => x.triplet === s.triplet) || {};
+        const pts = (from, key) => rows.filter(r => { const t = iso(r.date).getTime(); return t >= from && t < from + 366*864e5 && r[key] !== ''; })
+          .map(r => ({x: cur0 + (iso(r.date).getTime() - from), y: +r[key]}));
+        const cell = document.createElement('div'); cell.className = 'cell';
+        const st = a.status && a.status !== 'OK' ? ` · <span style="color:var(--red)">${a.status.toLowerCase()}</span>` : '';
+        cell.innerHTML = `<div class="h"><b>${s.name}</b><span>${(+s.elev_ft).toLocaleString()} ft${st}</span></div><div class="h"><span>${a.swe_in !== '' && a.swe_in != null ? a.swe_in + ' in' : '—'}${a.swe_pct ? ' · ' + a.swe_pct + '% of median' : ''}</span><span>${s.massif[0] + s.massif.slice(1).toLowerCase()}</span></div><div class="chart"></div>`;
+        sm.appendChild(cell);
+        lineChart(cell.querySelector('.chart'), [
+          {name:'Median', color:C.faint, dash:'4 3', w:1.5, pts:pts(prev0, 'swe_med')},
+          {name:`WY ${wy-1}`, color:C.s2, pts:pts(prev0, 'swe')},
+          {name:`WY ${wy}`, color:C.s1, pts:pts(cur0, 'swe')},
+        ], {label:`Snow water equivalent at ${s.name}`, h:150, y0:0, x0:cur0, x1:cur0 + 365*864e5, tfmt:v => fmt(v,1) + ' in', yfmt:v => v + '"', snap:2*864e5});
+      }
+    };
+    drawSM(); let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawSM, 200); });
+  }
 
-  // Massif cards
-  document.getElementById('massif-grid').innerHTML = Object.entries(massifs)
-    .map(([name, stns]) => {
-      const avgSwe = stns.reduce((a,s)=>a+parseFloat(s.swe_in||0),0)/stns.length;
-      const avgPct = stns.reduce((a,s)=>a+parseFloat(s.swe_pct||0),0)/stns.length;
-      const avgSL  = stns.reduce((a,s)=>a+parseFloat(s.snow_level_ft||0),0)/stns.length;
-      return `
-        <div class="massif-card">
-          <div class="massif-name">${name}</div>
-          <div class="massif-stats">
-            <div>${stns.length} station${stns.length!==1?'s':''}</div>
-            <div>Avg SWE: <span>${fmt(avgSwe,1)}"</span></div>
-            <div>% Normal: <span>${fmt(avgPct,0)}%</span></div>
-            <div>Snow Level: <span>${fmt(avgSL,0)} ft</span></div>
-          </div>
-          ${sweBadge(avgPct)}
-        </div>`;
-    }).join('');
+  // review table
+  const all = M.find(r => r.massif === 'ALL');
+  $('#rev-sub').textContent = all && all.last_wy_peak_pct ? `Water year ${+S.water_year - 1}, October to September. Summed over the stations with data, the snowpack peaked at ${all.last_wy_peak_pct}% of the median peak, and most stations melted out weeks early.` : '';
+  const md = s => s ? dlabel(iso(s)) : '—';
+  $('#review').innerHTML = '<thead><tr><th>Station</th><th class="l">Massif</th><th>Peak, in</th><th>Date</th><th>Median peak</th><th>Date</th><th>% of median</th><th>Melted out</th><th>Median</th><th>Days early</th></tr></thead><tbody>' +
+    R.map(r => `<tr><td>${r.name}</td><td class="l">${r.massif[0] + r.massif.slice(1).toLowerCase()}</td><td class="hi">${r.peak_in || '—'}</td><td>${md(r.peak_date)}</td><td>${r.median_peak_in || '—'}</td><td>${md(r.median_peak_date)}</td><td class="hi">${r.peak_pct || '—'}</td><td>${md(r.melt_out)}</td><td>${md(r.median_melt_out)}</td><td>${r.melt_out_days_early || '—'}</td></tr>`).join('') + '</tbody>';
 
-  // Atmospheric analysis
-  const lrEstimate = -6.5; // Standard -- would come from FORTRAN output
-  document.getElementById('atmos-panel').innerHTML = `
-    <div class="atmos-grid">
-      <div>
-        <div class="atmos-item">
-          <div class="label">Storm Classification</div>
-          <div class="value">${stormType}</div>
-        </div>
-        <div class="atmos-item" style="margin-top:1rem">
-          <div class="label">Atmospheric River Index</div>
-          <div class="value big">${fmt(arIndex,2)}</div>
-          <div class="ar-bar-container">
-            <div class="ar-bar-track">
-              <div class="ar-bar-fill" style="width:${arPct}%"></div>
-            </div>
-            <div class="ar-labels"><span>NO AR</span><span>WEAK</span><span>MODERATE</span><span>STRONG AR</span></div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="atmos-item">
-          <div class="label">Regional Snow Level</div>
-          <div class="value">${fmt(avgSnolvl,0)} ft</div>
-        </div>
-        <div class="atmos-item">
-          <div class="label">Lapse Rate (est)</div>
-          <div class="value">${lrEstimate.toFixed(1)} C/km</div>
-        </div>
-        <div class="atmos-item">
-          <div class="label">Region SWE % Normal</div>
-          <div class="value">${fmt(avgSwePct,1)}%</div>
-        </div>
-      </div>
-    </div>`;
-
-  // SWE bar chart (horizontal bars)
-  const maxSwe = Math.max(...allSwe);
-  document.getElementById('swe-bars').innerHTML = stations
-    .sort((a,b) => parseFloat(b.swe_in)-parseFloat(a.swe_in))
-    .map(s => {
-      const pct = (parseFloat(s.swe_in)/maxSwe)*100;
-      const cl  = sweClass(s.swe_pct);
-      return `
-        <div class="spark-row">
-          <div class="spark-name">${s.station_name}</div>
-          <div style="flex:1;display:flex;align-items:center;gap:.5rem">
-            <div style="flex:1;height:10px;background:#1a1000;border-radius:2px;overflow:hidden">
-              <div style="width:${pct}%;height:100%;background:var(--amber);opacity:.8;border-radius:2px"></div>
-            </div>
-          </div>
-          <div class="spark-val ${cl}">${fmt(s.swe_in,1)}"</div>
-          <div class="spark-val" style="width:55px;color:var(--amber-dim)">${fmt(s.swe_pct,0)}%</div>
-        </div>`;
-    }).join('');
-
-  // Full station table
-  document.getElementById('station-table').innerHTML = `
-    <table class="tbl">
-      <thead><tr>
-        <th>STATION</th><th>MASSIF</th><th>ELEV(FT)</th>
-        <th>SWE(IN)</th><th>%NORM</th>
-        <th>TMAX°C</th><th>TMIN°C</th><th>TAVG°C</th>
-        <th>SNOLVL(FT)</th><th>PHASE</th><th>MELT-IDX</th><th>DATE</th>
-      </tr></thead>
-      <tbody>
-        ${stations.map(s => `<tr>
-          <td>${s.station_name}</td>
-          <td>${s.massif}</td>
-          <td>${fmt(s.elev_ft,0)}</td>
-          <td class="${sweClass(s.swe_pct)}">${fmt(s.swe_in,1)}</td>
-          <td class="${sweClass(s.swe_pct)}">${fmt(s.swe_pct,0)}%</td>
-          <td>${fmt(s.tmax_c,1)}</td>
-          <td>${fmt(s.tmin_c,1)}</td>
-          <td>${fmt(s.tavg_c,1)}</td>
-          <td>${fmt(s.snow_level_ft,0)}</td>
-          <td class="${phaseClass(s.snow_frac)}">${phaseLabel(s.snow_frac)}</td>
-          <td>${fmt(s.melt_index,2)}</td>
-          <td>${s.date}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`;
-}
-
-// ── FETCH & INIT ──────────────────────────────────────────────────────
-async function init() {
+  // map
   try {
-    const resp = await fetch('analysis.csv?_=' + Date.now());
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const text = await resp.text();
-    const stations = parseCSV(text);
-    if (!stations.length) throw new Error('No station data');
-    render(stations);
-  } catch(err) {
-    document.getElementById('hdr-status').textContent = 'FETCH ERROR';
-    const msg = `<div class="error-msg">ERROR: Could not load analysis.csv — ${err.message}<br>
-      Run: <code>python3 fetch_wx.py && gfortran -O2 -o cascadia-wx CASCADIA-WX.f90 -lm && ./cascadia-wx</code><br>
-      Then serve locally: <code>python3 -m http.server 8000</code></div>`;
-    ['stats-grid','massif-grid','atmos-panel','swe-bars','station-table']
-      .forEach(id => { document.getElementById(id).innerHTML = msg; });
-  }
-}
-init();
+    const map = L.map('map', {scrollWheelZoom:false, attributionControl:true}).setView([47.4, -122.3], 7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'© OpenStreetMap, © CARTO', maxZoom:12}).addTo(map);
+    for (const s of ST){
+      const a = A.find(x => x.triplet === s.triplet) || {};
+      L.circleMarker([+s.lat, +s.lon], {radius:7, color:'#000', weight:2, fillColor:a.status === 'OK' ? C.s1 : '#ff6b5b', fillOpacity:1}).addTo(map)
+        .bindPopup(`<b>${s.name}</b><br>${(+s.elev_ft).toLocaleString()} ft · ${s.note}<br>SWE ${a.swe_in || '—'} in${a.swe_pct ? ' (' + a.swe_pct + '% of median)' : ''}<br>NRCS ${s.triplet}`);
+    }
+    L.marker([47.937, -124.555], {icon:L.divIcon({className:'', html:'<div style="color:#4fc3f7;font:600 20px IBM Plex Mono">◆</div>', iconSize:[16,16], iconAnchor:[8,10]})})
+      .addTo(map).bindPopup('<b>Quillayute (KUIL)</b><br>NWS weather balloon, launched at 00Z and 12Z');
+  } catch(e){ console.warn(e); }
+
+  if (repT) $('#report').textContent = repT;
+  if (srcT) codingForm(srcT);
+  $('#form-date').textContent = 'DATE ' + (S.data_date || '');
+})();
 </script>
 </body>
 </html>
