@@ -1,0 +1,7 @@
+cascadia-wx
+cascadia-wx.exe
+soundings_raw.csv
+fetch_status.csv
+*.tmp
+.pixi/
+tools/probe_out*/

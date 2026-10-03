@@ -1,54 +1,55 @@
-name: CASCADIA-WX - Daily Mountain Weather Analysis
+name: CASCADIA-WX - Daily Batch
 
 on:
+  schedule:
+    # after each Quillayute balloon (00Z and 12Z) is in the archive, and the
+    # morning run after the overnight SNOTEL reports:
+    - cron: '17 15 * * *'    # 15:17 UTC = 8:17 AM PDT / 7:17 AM PST
+    - cron: '17 3 * * *'     # 03:17 UTC = 8:17 PM PDT / 7:17 PM PST
+  workflow_dispatch:
   push:
     branches: [ main ]
-  schedule:
-    - cron: '0 15 * * *'   # 15:00 UTC = 8:00 AM Pacific (after SNOTEL updates)
-  workflow_dispatch:
+    paths: [ 'CASCADIA-WX.f90', 'fetch_wx.py', 'stations.csv', 'run_job.sh', '.github/workflows/cascadia-wx.yml' ]
 
 permissions:
   contents: write
 
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
+concurrency:
+  group: cascadia-wx-batch
+  cancel-in-progress: false
 
+jobs:
+  batch:
+    runs-on: ubuntu-24.04          # pinned: GFortran 13 from Ubuntu noble
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install GFortran
-        run: sudo apt-get install -y gfortran
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq gfortran bc > /dev/null && gfortran --version | head -1
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Run the batch job
+        run: ./run_job.sh
 
-      - name: Fetch live SNOTEL + valley weather data
-        run: |
-          echo "Fetching live NRCS SNOTEL data..."
-          python3 fetch_wx.py
+      - name: Job log
+        if: always()
+        run: cat job-log.txt || true
 
-      - name: Show fetched SNOTEL data
-        run: head -5 snotel_data.csv
-
-      - name: Compile CASCADIA-WX.f90
-        run: gfortran -O2 -o cascadia-wx CASCADIA-WX.f90 -lm
-
-      - name: Run CASCADIA-WX analysis
-        run: ./cascadia-wx
-
-      - name: Show report
+      - name: Report
         run: cat cascadia-wx-report.txt
 
-      - name: Commit updated data and report
+      - name: Warn when data were missing
+        run: |
+          rc=$(grep '^return_code,' summary.csv | cut -d, -f2)
+          if [ "$rc" != "0" ]; then
+            grep -h '^  CWX' cascadia-wx-report.txt | while read -r m; do echo "::warning::$m"; done
+          fi
+
+      - name: Commit the outputs
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add snotel_data.csv valley_data.csv \
-                  cascadia-wx-report.txt analysis.csv
-          git diff --staged --quiet || git commit -m \
-            "data: daily wx analysis $(date -u '+%Y-%m-%d') [skip ci]"
-          git push
+          git add snotel_daily.csv sounding_series.csv upper_air.csv analysis.csv massif.csv \
+                  review.csv summary.csv cascadia-wx-report.txt job-log.txt
+          if git diff --staged --quiet; then echo "Nothing changed."; exit 0; fi
+          git commit -q -m "data: CASCADIA-WX batch $(date -u '+%Y-%m-%d %H:%M') [skip ci]"
+          git pull -q --rebase && git push -q

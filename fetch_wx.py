@@ -1,161 +1,216 @@
 #!/usr/bin/env python3
 """
-fetch_wx.py  -  CASCADIA-WX data fetcher
-Fetches NRCS SNOTEL snowpack + NOAA surface temperatures.
-Uses NRCS Report Generator CSV endpoint (stable, no API key).
-Station IDs verified from wcc.sc.egov.usda.gov/nwcc/sntlsites.jsp
+fetch_wx.py - the CASCADIA-WX data fetcher. Python standard library only.
 
-Elements fetched: WTEQ (SWE in), TMAX (F), TMIN (F), PREC (in)
-% of median computed locally from baselines.csv
+It fetches and tidies the data. All the science is done by CASCADIA-WX.f90.
+
+  python3 fetch_wx.py            daily run
+
+Writes:
+  snotel_daily.csv    one row per station per day, from Oct 1 of last water
+                      year to today: SWE, snow depth, water-year precip and
+                      daily temperatures, with NRCS's 1991-2020 median SWE
+                      and precip for each calendar day.
+  soundings_raw.csv   every Quillayute (KUIL) weather-balloon level since the
+                      last sounding CASCADIA-WX processed (on the first run,
+                      since Oct 1 of last water year). Not committed.
+  fetch_status.csv    what was fetched, what failed, and today's date in
+                      Pacific time, so the FORTRAN can flag stale data.
+
+Sources:
+  NRCS AWDB REST API   wcc.sc.egov.usda.gov/awdbRestApi  (SNOTEL, no key)
+  Iowa Environmental Mesonet RAOB archive (NWS radiosondes, no key)
+
+If a station can't be fetched, its rows from the last good run are kept and
+the failure is recorded. Nothing is ever filled in with made-up values.
 """
+import csv
+import json
+import os
+import sys
+import time
+import urllib.parse
+import urllib.request
+from datetime import date, datetime, timedelta, timezone
 
-import urllib.request, urllib.parse, csv, sys, os, io, json
-from datetime import datetime, timezone, timedelta
-
-# ── VERIFIED SNOTEL STATION IDs ───────────────────────────────────────
-# Source: https://wcc.sc.egov.usda.gov/nwcc/sntlsites.jsp?state=WA
-SNOTEL_SITES = [
-    # (site_num, state, display_name,              massif,    elev_ft)
-    (679,  "WA", "Paradise",                       "RAINIER",  5150),
-    (1085, "WA", "Cayuse Pass",                    "RAINIER",  5260),
-    (942,  "WA", "Burnt Mountain",                 "RAINIER",  4160),
-    (943,  "WA", "Dungeness",                      "OLYMPICS", 3990),
-    (1107, "WA", "Buckinghorse",                   "OLYMPICS", 4850),
-    (774,  "WA", "Snoqualmie Pass",                "CASCADES", 3000),
-    (778,  "WA", "Stevens Pass",                   "CASCADES", 4061),
-    (780,  "WA", "Stampede Pass",                  "CASCADES", 3960),
-    (910,  "WA", "Elbow Lake",                     "CASCADES", 3050),
-    (375,  "WA", "Bumping Ridge",                  "CASCADES", 4600),
-    (418,  "WA", "Corral Pass",                    "RAINIER",  5810),
-]
-
-# ── VALLEY STATIONS (NOAA) ────────────────────────────────────────────
-VALLEY_STATIONS = [
-    ("KSEA", "Seattle-Tacoma Airport",  131),
-    ("KPWT", "Bremerton Airport",       148),
-    ("KTIW", "Tacoma Narrows Airport",   93),
-    ("KENW", "Enumclaw Airport",        202),
-]
-
-# ── BASELINES for % of normal (30-year median SWE at Apr 1) ──────────
-BASELINES = {
-    679:  50.3,   # Paradise
-    1085: 46.0,   # Cayuse Pass
-    942:  28.0,   # Burnt Mountain
-    943:  36.0,   # Dungeness
-    1107: 42.0,   # Buckinghorse
-    774:  25.4,   # Snoqualmie Pass
-    778:  40.8,   # Stevens Pass
-    780:  40.9,   # Stampede Pass
-    910:  22.0,   # Elbow Lake
-    375:  38.0,   # Bumping Ridge
-    418:  52.0,   # Corral Pass
-}
-
-OUTPUT_SNOTEL = "snotel_data.csv"
-OUTPUT_VALLEY = "valley_data.csv"
-REPORT_BASE   = "https://wcc.sc.egov.usda.gov/reportGenerator/view_csv/customSingleStationReport/daily"
+AWDB = "https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data"
+IEM = "https://mesonet.agron.iastate.edu/cgi-bin/request/raob.py"
+SOUNDING = "KUIL"                      # Quillayute, WA (WMO 72797)
+UA = {"User-Agent": "cascadia-wx (github.com/bdgroves/cascadia-wx)"}
+ELEMENTS = ["WTEQ", "SNWD", "PREC", "TAVG", "TMAX", "TMIN"]
+COLS = ["date", "triplet", "swe", "swe_med", "depth", "prec", "prec_med",
+        "tavg", "tmax", "tmin"]
 
 
-def fetch_snotel(site_num, state, name, massif, elev_ft, target_date):
-    date_str = target_date.strftime("%Y-%m-%d")
-    triplet  = f"{site_num}:{state}:SNTL"
-    # Fetch SWE, Tmax, Tmin, Precip (PCTMEDIAN is invalid — compute locally)
-    elements = "WTEQ::value,TMAX::value,TMIN::value,PREC::value"
-    url = (f"{REPORT_BASE}/"
-           f"{urllib.parse.quote(triplet, safe=':')}"
-           f"/{date_str},{date_str}/{elements}")
+def pacific_today(now_utc):
+    """Today's date in Pacific time (DST from the second Sunday of March to
+    the first Sunday of November), without needing tz data."""
+    y = now_utc.year
+    mar = date(y, 3, 8) + timedelta(days=(6 - date(y, 3, 8).weekday()) % 7)
+    nov = date(y, 11, 1) + timedelta(days=(6 - date(y, 11, 1).weekday()) % 7)
+    start = datetime(y, mar.month, mar.day, 10, tzinfo=timezone.utc)
+    end = datetime(y, nov.month, nov.day, 9, tzinfo=timezone.utc)
+    off = 7 if start <= now_utc < end else 8
+    return (now_utc - timedelta(hours=off)).date()
 
-    print(f"  {triplet} - {name}...", end=" ", flush=True)
 
-    result = {
-        "id": triplet, "name": name, "massif": massif,
-        "elev_ft": elev_ft, "date": date_str,
-        "swe": 0.0, "swe_pct": 0.0,
-        "tmax": 32.0, "tmin": 28.0, "precip": 0.0,
-    }
+def http(url, tries=3, timeout=120):
+    last = None
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, headers=UA)
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read()
+        except Exception as e:          # noqa: BLE001
+            last = e
+            time.sleep(5 * (i + 1))
+    raise last
 
+
+def num(v):
+    return f"{float(v):.2f}".rstrip("0").rstrip(".") if isinstance(
+        v, (int, float)) and v > -99 else ""
+
+
+def fetch_station(triplet, start, end):
+    """{date: {col: value}} for one station, values and medians."""
+    q = urllib.parse.urlencode({
+        "stationTriplets": triplet, "elements": ",".join(ELEMENTS),
+        "duration": "DAILY", "beginDate": str(start), "endDate": str(end),
+        "centralTendencyType": "MEDIAN"})
+    payload = json.loads(http(f"{AWDB}?{q}"))
+    rows = {}
+    blocks = payload[0].get("data", []) if payload else []
+    for b in blocks:
+        el = b["stationElement"]["elementCode"]
+        for v in b.get("values", []):
+            r = rows.setdefault(v["date"][:10], {})
+            if el == "WTEQ":
+                r["swe"], r["swe_med"] = num(v.get("value")), num(v.get("median"))
+            elif el == "PREC":
+                r["prec"], r["prec_med"] = num(v.get("value")), num(v.get("median"))
+            elif el == "SNWD":
+                r["depth"] = num(v.get("value"))
+            else:
+                r[el.lower()] = num(v.get("value"))
+    if not blocks:
+        raise ValueError("AWDB returned no data blocks")
+    return rows
+
+
+def read_csv(path):
+    if not os.path.exists(path):
+        return []
+    with open(path, newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def write_csv(path, cols, rows):
+    tmp = path + ".tmp"
+    with open(tmp, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore",
+                           lineterminator="\n")
+        w.writeheader()
+        w.writerows(rows)
+    os.replace(tmp, path)               # atomic: never a half-written file
+
+
+def snotel(today, status):
+    wy = today.year + 1 if today.month >= 10 else today.year
+    start = date(wy - 2, 10, 1)          # Oct 1 of last water year
+    stations = read_csv("stations.csv")
+    old = {}
+    for r in read_csv("snotel_daily.csv"):
+        old.setdefault(r["triplet"], []).append(r)
+    out, ok, failed = [], 0, []
+    for s in stations:
+        t = s["triplet"]
+        try:
+            rows = fetch_station(t, start, today)
+            got = [dict(date=d, triplet=t, **v) for d, v in sorted(rows.items())
+                   if any(v.get(k) for k in ("swe", "prec", "tavg", "depth"))]
+            if not got:
+                raise ValueError("no values in the date range")
+            out += got
+            ok += 1
+            print(f"  {t:<12} {s['name']:<16} {len(got):4d} days, "
+                  f"last {got[-1]['date']}")
+        except Exception as e:           # noqa: BLE001
+            kept = [r for r in old.get(t, []) if r["date"] >= str(start)]
+            out += kept
+            last = kept[-1]["date"] if kept else "none"
+            failed.append(t)
+            print(f"  {t:<12} {s['name']:<16} FAILED ({str(e)[:60]}); "
+                  f"kept {len(kept)} days from the last run, last {last}")
+    write_csv("snotel_daily.csv", COLS, out)
+    status["snotel_ok"] = ok
+    status["snotel_failed"] = " ".join(failed)
+    print(f"  wrote {len(out)} station-days to snotel_daily.csv")
+
+
+def soundings(today, status):
+    """Fetch every KUIL sounding since the last one in sounding_series.csv."""
+    series = read_csv("sounding_series.csv")
+    if series:
+        k = series[-1]["key"]
+        since = datetime(int(k[:4]), int(k[4:6]), int(k[6:8]), int(k[8:10]),
+                         tzinfo=timezone.utc)
+    else:
+        wy = today.year + 1 if today.month >= 10 else today.year
+        since = datetime(wy - 2, 10, 1, tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    levels, chunk = [], since
     try:
-        req = urllib.request.Request(url,
-            headers={"User-Agent": "cascadia-wx/1.0 (github.com/bdgroves/cascadia-wx)"})
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read().decode("utf-8", errors="replace")
-    except Exception as e:
-        print(f"ERROR: {e}")
-        return result
-
-    # Parse CSV — skip # comment lines, find data row
-    def safe(v, default=0.0):
-        try: return float(v.strip()) if v.strip() else default
-        except: return default
-
-    for line in raw.split('\n'):
-        if line.startswith('#') or not line.strip():
+        while chunk < now:
+            stop = min(chunk + timedelta(days=31), now + timedelta(hours=1))
+            q = urllib.parse.urlencode({
+                "station": SOUNDING, "sts": chunk.strftime("%Y-%m-%dT%H:%MZ"),
+                "ets": stop.strftime("%Y-%m-%dT%H:%MZ")})
+            text = http(f"{IEM}?{q}", timeout=300).decode()
+            for r in csv.DictReader(text.splitlines()):
+                levels.append(r)
+            chunk = stop
+    except Exception as e:               # noqa: BLE001
+        status["sounding_error"] = str(e)[:80]
+        print(f"  {SOUNDING} soundings FAILED: {str(e)[:80]}")
+    m = lambda v: "" if v in ("M", "", None) else v   # noqa: E731
+    rows, keys = [], set()
+    for r in levels:
+        t = r["validUTC"]                      # 2026-10-02 12:00:00
+        key = t[0:4] + t[5:7] + t[8:10] + t[11:13]
+        if key < since.strftime("%Y%m%d%H"):
             continue
-        parts = line.split(',')
-        if len(parts) >= 2 and '-' in parts[0]:
-            # Date, WTEQ, TMAX, TMIN, PREC
-            result["swe"]    = safe(parts[1] if len(parts) > 1 else '', 0.0)
-            result["tmax"]   = safe(parts[2] if len(parts) > 2 else '', 32.0)
-            result["tmin"]   = safe(parts[3] if len(parts) > 3 else '', 28.0)
-            result["precip"] = safe(parts[4] if len(parts) > 4 else '', 0.0)
-            break
-
-    # Compute % of normal from local baselines
-    median = BASELINES.get(site_num, 0.0)
-    if median > 0 and result["swe"] > 0:
-        result["swe_pct"] = (result["swe"] / median) * 100.0
-
-    print(f"SWE={result['swe']:.1f}\" ({result['swe_pct']:.0f}%) "
-          f"T={result['tmax']:.0f}/{result['tmin']:.0f}F")
-    return result
-
-
-def fetch_noaa(station_id, name, elev_m):
-    url = f"https://api.weather.gov/stations/{station_id}/observations/latest"
-    print(f"  {station_id} - {name}...", end=" ", flush=True)
-    try:
-        req = urllib.request.Request(url, headers={
-            "User-Agent": "cascadia-wx/1.0",
-            "Accept": "application/geo+json"})
-        with urllib.request.urlopen(req, timeout=15) as r:
-            data = json.loads(r.read())
-        temp = data["properties"]["temperature"]["value"]
-        if temp is None: raise ValueError("null temp")
-        print(f"{float(temp):.1f}C")
-        return {"name": name, "elev_m": elev_m, "temp_c": float(temp)}
-    except Exception as e:
-        default = 10.0 - elev_m * 0.0065
-        print(f"ERROR ({e}) — using {default:.1f}C estimate")
-        return {"name": name, "elev_m": elev_m, "temp_c": default}
+        keys.add(key)
+        rows.append(dict(key=key, p=m(r["pressure_mb"]), z=m(r["height_m"]),
+                         t=m(r["tmpc"]), td=m(r["dwpc"]), dir=m(r["drct"]),
+                         kt=m(r["speed_kts"])))
+    rows.sort(key=lambda r: (r["key"], -float(r["p"] or 0)))
+    write_csv("soundings_raw.csv", ["key", "p", "z", "t", "td", "dir", "kt"], rows)
+    status["soundings_fetched"] = len(keys)
+    status["sounding_latest"] = max(keys) if keys else ""
+    print(f"  {SOUNDING}: {len(keys)} soundings since "
+          f"{since:%Y-%m-%d %HZ}, {len(rows)} levels")
 
 
 def main():
-    now    = datetime.now(timezone.utc)
-    target = now - timedelta(days=1)
-    print(f"CASCADIA-WX FETCH  //  {now.strftime('%Y-%m-%d %H:%M UTC')}")
-    print(f"Target date: {target.strftime('%Y-%m-%d')}\n")
-    print(f"Fetching {len(SNOTEL_SITES)} SNOTEL stations...\n")
+    now = datetime.now(timezone.utc)
+    today = pacific_today(now)
+    print(f"CASCADIA-WX FETCH  {now:%Y-%m-%d %H:%M} UTC  (Pacific date {today})")
+    status = {"run_utc": now.strftime("%Y-%m-%d %H:%M"),
+              "pacific_date": str(today)}
+    print("NRCS SNOTEL")
+    snotel(today, status)
+    print("NWS radiosonde, Quillayute")
+    soundings(today, status)
+    with open("fetch_status.csv", "w", newline="") as f:
+        f.write("key,value\n")
+        for k, v in status.items():
+            f.write(f"{k},{v}\n")
+    bad = status["snotel_ok"] == 0
+    # exit 4 = some data missing (the job carries on and flags it)
+    sys.exit(4 if bad or status.get("snotel_failed") or
+             status.get("sounding_error") else 0)
 
-    records = []
-    for site_num, state, name, massif, elev_ft in SNOTEL_SITES:
-        r = fetch_snotel(site_num, state, name, massif, elev_ft, target)
-        records.append(r)
-
-    fields = ["id","name","massif","elev_ft","swe","swe_pct","tmax","tmin","precip","date"]
-    with open(OUTPUT_SNOTEL, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
-        w.writeheader(); w.writerows(records)
-    print(f"\nWrote {len(records)} records to {OUTPUT_SNOTEL}")
-
-    print(f"\nFetching {len(VALLEY_STATIONS)} valley stations...\n")
-    valley = [fetch_noaa(s, n, e) for s, n, e in VALLEY_STATIONS]
-    with open(OUTPUT_VALLEY, "w", newline="") as f:
-        f.write("name,elev_m,temp_c\n")
-        for r in valley:
-            f.write(f"{r['name']},{r['elev_m']},{r['temp_c']:.1f}\n")
-    print(f"Wrote {len(valley)} records to {OUTPUT_VALLEY}")
-    print("Fetch complete. Ready for CASCADIA-WX.")
 
 if __name__ == "__main__":
     main()
