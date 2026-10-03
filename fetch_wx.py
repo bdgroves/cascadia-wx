@@ -35,7 +35,6 @@ from datetime import date, datetime, timedelta, timezone
 
 AWDB = "https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data"
 IEM = "https://mesonet.agron.iastate.edu/cgi-bin/request/raob.py"
-SOUNDING = "KUIL"                      # Quillayute, WA (WMO 72797)
 UA = {"User-Agent": "cascadia-wx (github.com/bdgroves/cascadia-wx)"}
 ELEMENTS = ["WTEQ", "SNWD", "PREC", "TAVG", "TMAX", "TMIN"]
 COLS = ["date", "triplet", "swe", "swe_med", "depth", "prec", "prec_med",
@@ -151,51 +150,95 @@ def snotel(today, status):
     print(f"  wrote {len(out)} station-days to snotel_daily.csv")
 
 
-def soundings(today, status):
-    """Fetch every KUIL sounding since the last one in sounding_series.csv."""
-    series = read_csv("sounding_series.csv")
-    if series:
-        k = series[-1]["key"]
-        since = datetime(int(k[:4]), int(k[4:6]), int(k[6:8]), int(k[8:10]),
-                         tzinfo=timezone.utc)
-    else:
-        wy = today.year + 1 if today.month >= 10 else today.year
-        since = datetime(wy - 2, 10, 1, tzinfo=timezone.utc)
-    now = datetime.now(timezone.utc)
-    levels, chunk = [], since
-    try:
-        while chunk < now:
-            stop = min(chunk + timedelta(days=31), now + timedelta(hours=1))
-            q = urllib.parse.urlencode({
-                "station": SOUNDING, "sts": chunk.strftime("%Y-%m-%dT%H:%MZ"),
-                "ets": stop.strftime("%Y-%m-%dT%H:%MZ")})
-            text = http(f"{IEM}?{q}", timeout=120).decode()
-            for r in csv.DictReader(text.splitlines()):
-                levels.append(r)
-            chunk = stop
-    except Exception as e:               # noqa: BLE001
-        status["sounding_error"] = str(e)[:80]
-        print(f"  {SOUNDING} soundings FAILED: {str(e)[:80]}")
-    m = lambda v: "" if v in ("M", "", None) else v   # noqa: E731
-    rows, keys = [], set()
-    for r in levels:
+M = lambda v: "" if v in ("M", "", None) else v   # noqa: E731
+RAW_COLS = ["key", "station", "p", "z", "t", "td", "dir", "kt"]
+
+
+def iem_levels(station, start, stop):
+    """Every level of every sounding at station between start and stop (UTC), as raw rows."""
+    q = urllib.parse.urlencode({"station": station, "sts": start.strftime("%Y-%m-%dT%H:%MZ"),
+                                "ets": stop.strftime("%Y-%m-%dT%H:%MZ")})
+    text = http(f"{IEM}?{q}", timeout=120).decode()
+    rows = []
+    for r in csv.DictReader(text.splitlines()):
         t = r["validUTC"]                      # 2026-10-02 12:00:00
-        key = t[0:4] + t[5:7] + t[8:10] + t[11:13]
-        if key < since.strftime("%Y%m%d%H"):
-            continue
-        keys.add(key)
-        rows.append(dict(key=key, p=m(r["pressure_mb"]), z=m(r["height_m"]),
-                         t=m(r["tmpc"]), td=m(r["dwpc"]), dir=m(r["drct"]),
-                         kt=m(r["speed_kts"])))
-    rows.sort(key=lambda r: (r["key"], -float(r["p"] or 0)))
-    write_csv("soundings_raw.csv", ["key", "p", "z", "t", "td", "dir", "kt"], rows)
-    status["soundings_fetched"] = len(keys)
-    status["sounding_latest"] = max(keys) if keys else ""
-    print(f"  {SOUNDING}: {len(keys)} soundings since "
-          f"{since:%Y-%m-%d %HZ}, {len(rows)} levels")
+        rows.append(dict(key=t[0:4] + t[5:7] + t[8:10] + t[11:13], station=station,
+                         p=M(r["pressure_mb"]), z=M(r["height_m"]), t=M(r["tmpc"]),
+                         td=M(r["dwpc"]), dir=M(r["drct"]), kt=M(r["speed_kts"])))
+    return rows
+
+
+def soundings(today, status):
+    """Every sounding at each balloon site since the last one in sounding_series.csv."""
+    series = read_csv("sounding_series.csv")
+    last = {}
+    for r in series:
+        if r.get("station"):
+            last[r["station"]] = max(last.get(r["station"], ""), r["key"])
+    wy = today.year + 1 if today.month >= 10 else today.year
+    first = datetime(wy - 2, 10, 1, tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    rows, failed, counts = [], [], {}
+    for b in read_csv("balloons.csv"):
+        st = b["id"]
+        k = last.get(st)
+        since = datetime(int(k[:4]), int(k[4:6]), int(k[6:8]), int(k[8:10]), tzinfo=timezone.utc) if k else first
+        got, chunk = [], since
+        try:
+            while chunk < now:
+                stop = min(chunk + timedelta(days=31), now + timedelta(hours=1))
+                got += iem_levels(st, chunk, stop)
+                chunk = stop
+        except Exception as e:           # noqa: BLE001
+            failed.append(st)
+            print(f"  {st:<5} {b['name']:<11} FAILED: {str(e)[:80]}")
+        got = [r for r in got if r["key"] >= since.strftime("%Y%m%d%H")]
+        keys = {r["key"] for r in got}
+        counts[st] = len(keys)
+        rows += got
+        print(f"  {st:<5} {b['name']:<11} {len(keys):4d} soundings since {since:%Y-%m-%d %HZ}"
+              + (f", latest {max(keys)}" if keys else ""))
+    rows.sort(key=lambda r: (r["station"], r["key"], -float(r["p"] or 0)))
+    write_csv("soundings_raw.csv", RAW_COLS, rows)
+    status["soundings_fetched"] = sum(counts.values())
+    if failed:
+        status["sounding_error"] = " ".join(failed)
+
+
+def history(y0=1991, y1=2020):
+    """Thirty years of soundings for NORMALS.f90: history/<site>_<year>.csv, listed in files.txt.
+    00Z and 12Z launches only; about 720 MB, so it is downloaded only to rebuild the normals."""
+    from concurrent.futures import ThreadPoolExecutor
+    os.makedirs("history", exist_ok=True)
+    jobs = [(b["id"], y) for b in read_csv("balloons.csv") for y in range(y0, y1 + 1)]
+
+    def one(job):
+        st, y = job
+        path = f"history/{st}_{y}.csv"
+        if os.path.exists(path):
+            return path, "cached"
+        rows = []
+        for m in range(1, 13):
+            a = datetime(y, m, 1, tzinfo=timezone.utc)
+            z = datetime(y + (m == 12), m % 12 + 1, 1, tzinfo=timezone.utc)
+            rows += [r for r in iem_levels(st, a, z) if r["key"][8:10] in ("00", "12")]
+        rows.sort(key=lambda r: (r["key"], -float(r["p"] or 0)))
+        write_csv(path, RAW_COLS, rows)
+        return path, f"{len({r['key'] for r in rows})} soundings"
+
+    with ThreadPoolExecutor(4) as pool:
+        done = list(pool.map(one, jobs))
+    for path, note in done:
+        print(f"  {path}: {note}")
+    with open("history/files.txt", "w") as f:
+        f.write("\n".join(os.path.basename(p) for p, _ in done) + "\n")
 
 
 def main():
+    if "--history" in sys.argv:
+        print("CASCADIA-WX HISTORY  NWS soundings 1991-2020")
+        history()
+        return
     now = datetime.now(timezone.utc)
     today = pacific_today(now)
     print(f"CASCADIA-WX FETCH  {now:%Y-%m-%d %H:%M} UTC  (Pacific date {today})")
@@ -203,16 +246,14 @@ def main():
               "pacific_date": str(today)}
     print("NRCS SNOTEL")
     snotel(today, status)
-    print("NWS radiosonde, Quillayute")
+    print("NWS radiosondes")
     soundings(today, status)
     with open("fetch_status.csv", "w", newline="") as f:
         f.write("key,value\n")
         for k, v in status.items():
             f.write(f"{k},{v}\n")
-    bad = status["snotel_ok"] == 0
     # exit 4 = some data missing (the job carries on and flags it)
-    sys.exit(4 if bad or status.get("snotel_failed") or
-             status.get("sounding_error") else 0)
+    sys.exit(4 if status.get("snotel_failed") or status.get("sounding_error") else 0)
 
 
 if __name__ == "__main__":

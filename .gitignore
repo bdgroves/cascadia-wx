@@ -5,3 +5,7 @@ fetch_status.csv
 *.tmp
 .pixi/
 tools/probe_out*/
+history/
+normals
+*.mod
+__pycache__/

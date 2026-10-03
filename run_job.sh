@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# The CASCADIA-WX batch job: fetch, compile, run. Writes job-log.txt.
+# The CASCADIA-WX batch job: fetch, compile, (normals), run. Writes job-log.txt.
+#   ./run_job.sh              daily run
+#   ./run_job.sh --normals    also rebuild normals.csv from 30 years of balloons
 # Every step's output and return code goes in the log. The job carries on
 # through warnings (RC 4) and stops on RC >= 8, like a mainframe job step
 # with COND=(8,LE).
 set -u
 export TZ=UTC
 LOG=job-log.txt
+REBUILD=0; [ "${1:-}" = "--normals" ] && REBUILD=1; [ -f normals.csv ] || REBUILD=1
 START=$(date +%s.%N)
 MAXRC=0
 fcv=$(gfortran --version 2>/dev/null | head -1)
@@ -22,7 +25,7 @@ step () {   # step NAME command...
   local out; out=$("$@" 2>&1); local rc=$?
   local t=$(echo "$(date +%s.%N) - $t0" | bc)
   printf "STEP %-10s RC=%04d  %6.2fs  %s\n" "$name" "$rc" "$t" "$*" >> "$LOG"
-  echo "$out" | grep -v -e '^$' | sed 's/^/    /' >> "$LOG"
+  echo "$out" | grep -v -e '^$' -e '^  history/' | sed 's/^/    /' >> "$LOG"
   echo >> "$LOG"
   echo "$out"
   [ $rc -gt $MAXRC ] && MAXRC=$rc
@@ -30,8 +33,20 @@ step () {   # step NAME command...
 }
 
 step FETCH timeout 1200 python3 -u fetch_wx.py; rc=$?; [ $rc -ge 8 ] && exit 1
-step COMPILE gfortran -O2 -o cascadia-wx CASCADIA-WX.f90 || exit 1
+step COMPILE gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90 || exit 1
+if [ $REBUILD = 1 ]; then
+  step HISTORY timeout 3000 python3 -u fetch_wx.py --history || exit 1
+  step COMPILE gfortran -O2 -o normals CWX_PHYS.f90 NORMALS.f90 || exit 1
+  step NORMALS timeout 1800 ./normals; rc=$?; [ $rc -ge 8 ] && exit 1
+  { echo "NORMALS BUILT  $(date '+%Y-%m-%d %H:%M:%S') UTC  from NWS balloons, 1991-2020"; echo;
+    sed -n '/STEP HISTORY/,$p' "$LOG" | grep -v -e '^STEP COMPILE'; } > normals-log.txt
+  rm -rf history
+else
+  echo "STEP NORMALS    skipped: normals.csv is current (see normals-log.txt)" >> "$LOG"
+  echo >> "$LOG"
+fi
 step CASCADWX timeout 300 ./cascadia-wx; rc=$?; [ $rc -ge 8 ] && exit 1
 T=$(echo "$(date +%s.%N) - $START" | bc)
 printf "JOB CASCADWX   ENDED  MAXCC=%04d  %.1fs\n" "$MAXRC" "$T" >> "$LOG"
+rm -f *.mod
 exit 0
