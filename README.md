@@ -15,249 +15,125 @@
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
-**[→ Launch the Live Dashboard](https://bdgroves.github.io/cascadia-wx)**
+**[→ The live page: brooksgroves.com/cascadia-wx](https://brooksgroves.com/cascadia-wx/)**
+
+Twelve NRCS SNOTEL snow stations on Rainier, the Olympics and the Cascades, and the National Weather Service weather balloon at Quillayute on the Washington coast, run twice a day through a FORTRAN batch job. **CASCADIA-WX.f90** works out how much snow is on the mountains against NRCS's own medians, how high it's freezing, how much water vapour is coming ashore and whether that's atmospheric-river strength, and what last winter amounted to. It prints a 132-column report. The page shows that report on green-bar paper, the job log, the latest balloon's temperature profile, every balloon's freezing level and vapour transport, each station's snowpack against median, and the vapour-transport loop on a FORTRAN coding form.
+
+It is the sister project of [SIERRA-FLOW](https://github.com/bdgroves/sierra-flow-cobol), which does Sierra Nevada rivers in COBOL.
 
 ---
 
-> *"We're going to go out there and put this machine right in the path of the storm."*
-> — Dr. Jo Harding, Twister (1996)
+## The batch job
 
----
-
-## The Setup
-
-It's early April. The Cascades are running dry — 15% of normal snowpack. Snoqualmie Pass is bare. Stevens is bare. Stampede is bare. Someone in a cabin somewhere in the foothills can feel it. The snowpack that should be sitting up there, waiting to melt slow into August, isn't there. The reservoirs will notice in July.
-
-Every morning at 8AM, a terminal somewhere wakes up. A Python script reaches out to 11 weather stations buried in the mountains — sensors at Paradise on Rainier, high ridges in the Olympics, fog-soaked Cascade passes. It pulls the numbers. It writes a CSV. Then FORTRAN takes over.
-
-Not a wrapper. Not a library. **FORTRAN.** The language that computed the first numerical weather forecast in 1950 on a machine that filled a room. The same mathematical DNA that still runs inside the National Weather Service, NCAR, ECMWF — every serious atmospheric model on the planet. It reads the data, cranks through the physics — lapse rates, snow levels, precipitation phase, atmospheric river index, storm classification — and prints a report.
-
-Then it terminates. Normally. Return code zero.
-
-Nobody asked for this. It just needed to happen.
-
----
-
-## The Numbers
+At 15:17 and 03:17 UTC (8:17 a.m. and p.m. PDT), after each 12Z and 00Z balloon has reached the archive, GitHub Actions runs `run_job.sh` on Ubuntu 24.04:
 
 ```
-4, 8, 15, 16, 23, 42
+STEP FETCH     python3 fetch_wx.py       NRCS SNOTEL + KUIL soundings  → snotel_daily.csv, soundings_raw.csv
+STEP COMPILE   gfortran -O2              GNU Fortran 13
+STEP CASCADWX  ./cascadia-wx             → cascadia-wx-report.txt and the CSVs below
 ```
 
-Enter them every 108 minutes or the snowpack anomaly gets worse. We don't make the rules.
+Each step's output, return code and time go into `job-log.txt`. The job carries on through warnings and stops on a return code of 8 or more, like a mainframe step with `COND=(8,LE)`.
 
-```
-CASCADIA-WX: LOADING SNOTEL DATA...
-  STATION  1: Paradise
-  STATION  2: Cayuse Pass
-  STATION  3: Burnt Mountain
-  ...
-  STATION 11: Corral Pass
-CASCADIA-WX: 11 SNOTEL STATIONS LOADED
-CASCADIA-WX: COMPUTING LAPSE RATES...
-CASCADIA-WX: COMPUTING SNOW LEVELS...
-CASCADIA-WX: COMPUTING DEGREE DAYS...
-CASCADIA-WX: COMPUTING AR INDEX...
-CASCADIA-WX: WRITING REPORT...
-CASCADIA-WX: NORMAL TERMINATION.
-```
+| RC | Meaning |
+|---|---|
+| 0 | Normal: every station reported and the latest balloon is under 36 hours old |
+| 4 | Warning: a station or the balloon is missing or stale. The report names it (`CWX011W`–`CWX017W`) |
+| 8 | No SNOTEL data at all. Nothing is written |
+| 12 | An input file can't be opened |
 
-Every day. Automated. Whether anyone's watching or not. The hatch has to be maintained.
+If NRCS doesn't answer for a station, the fetcher keeps that station's rows from the last run and the FORTRAN flags them as stale. If the first three stations all fail, it treats NRCS as down and doesn't wait on the rest. Nothing is ever filled in with made-up values.
 
----
+## What it computes
 
-## What It Computes
+**Snowpack.** For each station on the latest day: snow water equivalent (SWE), snow depth, 7-day change, water-year precipitation, and each against NRCS's 1991–2020 median for that calendar day, which AWDB returns alongside the value. Percent of median is left blank until the median itself reaches 1 inch, as NRCS does, because early-season percentages are meaningless. The **massif index** is the sum of the stations' SWE over the sum of their medians, the way NRCS computes a basin index (not an average of percentages). The classes are NRCS's map classes: under 50%, 50–69, 70–89, 90–109 (near normal), 110–129, 130–149, 150% or more.
 
-FORTRAN does the atmospheric science. Not because it's convenient — because it's what the atmosphere deserves.
+**The balloon.** For every Quillayute sounding (KUIL, WMO 72797), from every level it reports:
 
-| Computation | Physics |
-|-------------|---------|
-| **Environmental lapse rate** | Temperature gradient C/km, valley floor → mountain stations |
-| **Snow level** | Elevation where T = 2°C — the rain/snow phase boundary |
-| **Precipitation phase** | Snow % vs rain % at each station using transition zone logic |
-| **Degree days** | Heating / cooling / positive — the snowmelt energy budget |
-| **Atmospheric river index** | Proxy IVT score from snow level anomaly + SWE rate |
-| **Storm classification** | Gulf of Alaska / Pineapple Express / Cutoff Low |
-| **SWE percent of normal** | Current snowpack vs 30-year NRCS median |
-| **Massif roll-up** | Rainier / Olympics / Cascades averaged and classified |
-| **Atmospheric stability** | Unstable / Cond. Unstable / Neutral / Stable |
+| Quantity | How |
+|---|---|
+| Freezing level | Lowest height where the temperature falls through 0 °C, interpolated between levels |
+| Wet-bulb temperature | The psychrometric equation, e<sub>s</sub>(T<sub>w</sub>) − γ·p·(T − T<sub>w</sub>) = e, solved by bisection |
+| Wet-bulb zero | Lowest height where the wet-bulb falls through 0 °C |
+| Snow level | 1,000 ft below the freezing level: the National Weather Service's rule of thumb, labelled as an estimate |
+| Precipitable water | (1/g) ∫ q dp, surface to 300 hPa |
+| Integrated vapour transport (IVT) | (1/g) ∫ q·**V** dp, surface to 300 hPa, as east and north components; direction it comes from |
+| Atmospheric river | IVT ≥ 250 kg m⁻¹ s⁻¹; weak, moderate, strong, extreme and exceptional at 250/500/750/1000/1250 (Ralph et al. 2019) |
+| Lapse rate | 850 to 700 hPa, °C per km |
+| 700 hPa wind | Interpolated in ln p |
 
----
+Specific humidity comes from the dew point (Bolton 1980). Humidity and wind are interpolated in ln p where a level lacks them; humidity above the highest dew-point report is taken as zero. A sounding that ends below 300 hPa gets no IVT and a `CWX017W` warning. The balloon is one place at one moment; the official atmospheric-river scale also weighs duration, and the report says so.
 
-## April 2, 2026 — What the Numbers Said
+**Checked.** For the 2026-10-02 12Z sounding, FORTRAN's precipitable water is 27.6 mm; MetPy gives 27.8 mm and the University of Wyoming's sounding page 28.1 mm. Wet-bulb at 850 hPa: 7.1 °C (MetPy 7.0 °C). IVT for four soundings matches an independent Python integration on a 5 hPa grid to the unit (186, 250, 302, 242 kg m⁻¹ s⁻¹).
 
-```
-SECTION III: MOUNTAIN MASSIF SNOWPACK SUMMARY
+**Temperature with height.** The free-air rate from the balloon, and the mountain-surface rate from a least-squares fit of SNOTEL daily mean temperature against elevation, with r². The surface rate is usually shallower, and often negative in fall and winter when cold air pools in valleys.
 
-  MASSIF        STATIONS  AVG SWE (IN)  AVG % NORMAL  STATUS
-  ------------------------------------------------------------
-  RAINIER            4         24.65          52.5  WELL BELOW NORMAL
-  OLYMPICS           2         13.90          33.2  WELL BELOW NORMAL
-  CASCADES           5          4.68          15.1  WELL BELOW NORMAL
+**Last water year in review.** Each station's peak SWE and date against the median peak, and its melt-out date against the median melt-out.
 
-SECTION IV: ATMOSPHERIC ANALYSIS
+## Files
 
-  ATMOSPHERIC RIVER INDEX:      -0.71
-  AR STATUS:                  NO AR CONDITIONS
-  STORM CLASSIFICATION:       GULF OF ALASKA
-  ENVIRONMENTAL LAPSE RATE:    -5.43 C/km
-  REGIONAL SNOW LEVEL:         2972. ft
-  REGIONAL SWE % NORMAL:        32.0%
-```
+| File | What |
+|---|---|
+| `CASCADIA-WX.f90` | The program. Kept to 72 columns |
+| `fetch_wx.py` | The fetcher. Python standard library only |
+| `stations.csv` | The 12 stations, checked against NRCS station metadata |
+| `run_job.sh` | The batch job; writes `job-log.txt` |
+| `snotel_daily.csv` | Daily station data and medians, last water year and this one |
+| `sounding_series.csv` | One row per balloon, last water year and this one; updated in place |
+| `upper_air.csv` | Every level of the latest balloon, with wet-bulb and humidity |
+| `analysis.csv`, `massif.csv`, `review.csv`, `summary.csv` | Results |
+| `cascadia-wx-report.txt` | The printed report |
+| `index.html` | The page. It reads the files above and draws them; it calculates nothing |
 
-Snoqualmie Pass: 0.0 inches. Stevens Pass: 0.0 inches. Stampede Pass: 0.0 inches.
-Paradise, sitting at 5,150 feet on the flank of Rainier, still holding 36.7 inches — 73% of normal.
-The mountain remembers what the passes have forgotten.
+## The twelve stations
 
----
+| Station | NRCS ID | Massif | Elevation |
+|---|---|---|---|
+| Paradise | 679 | Rainier | 5,150 ft |
+| Cayuse Pass | 1085 | Rainier | 5,260 ft |
+| Burnt Mountain | 942 | Rainier | 4,160 ft |
+| Corral Pass | 418 | Rainier | 5,810 ft |
+| Dungeness | 943 | Olympics | 3,990 ft |
+| Buckinghorse | 1107 | Olympics | 4,850 ft |
+| Waterhole | 974 | Olympics | 5,010 ft |
+| Olallie Meadows (Snoqualmie Pass) | 672 | Cascades | 4,010 ft |
+| Stevens Pass | 791 | Cascades | 3,940 ft |
+| Stampede Pass | 788 | Cascades | 3,850 ft |
+| Elbow Lake | 910 | Cascades | 3,050 ft |
+| Bumping Ridge | 375 | Cascades | 4,600 ft |
 
-## The Eleven Stations
+## Corrections (October 2026)
 
-Three massifs. Eleven sensors. Each one a data point in a system that's been measuring snowpack since before most of the code running today was written.
+Version 1 (April 2026) got several things wrong, and the conclusions drawn from it with them:
 
-| Station | Massif | Elevation | What It Watches |
-|---------|--------|-----------|-----------------|
-| Paradise | Rainier | 5,150 ft | Heart of the Nisqually watershed |
-| Cayuse Pass | Rainier | 5,260 ft | White River headwaters |
-| Burnt Mountain | Rainier | 4,160 ft | Wilkeson Creek drainage |
-| Corral Pass | Rainier | 5,810 ft | Highest station — last to lose snow |
-| Dungeness | Olympics | 3,990 ft | Olympic Peninsula water supply |
-| Buckinghorse | Olympics | 4,850 ft | Elwha River headwaters |
-| Snoqualmie Pass | Cascades | 3,000 ft | I-90 corridor — first to go bare |
-| Stevens Pass | Cascades | 4,061 ft | US-2 corridor |
-| Stampede Pass | Cascades | 3,960 ft | Yakima River basin |
-| Elbow Lake | Cascades | 3,050 ft | South Fork Nooksack |
-| Bumping Ridge | Cascades | 4,600 ft | Bumping River / Yakima |
+- **Three stations didn't exist.** It asked NRCS for 774, 778 and 780 as Snoqualmie, Stevens and Stampede passes. NRCS answers "Stations do not exist" for all three. Stevens Pass is 791 and Stampede Pass 788; there is no Snoqualmie Pass SNOTEL, and Olallie Meadows (672) is the station for the pass.
+- **Missing data became zero snow.** When a request failed, the fetcher filled in 32 °F, 28 °F and 0 inches and carried on. Those three stations read zero every day from April 1, and on 15 days NRCS was down and every station read zero. The report still ended "NORMAL TERMINATION".
+- **The normals were made up.** `baselines.csv` held one April 1 figure per station that doesn't match NRCS (Paradise 50.3 in; NRCS's April 1 median is 72.6 in), and every day of the year was compared against it.
+- **The atmospheric river index wasn't a measurement.** It was (snow level − 3000)/1000 + (SWE% − 100)/100. On a dry October 1 it reported "STRONG AR CONDITIONS, PINEAPPLE EXPRESS". The storm classification, stability classes and melt index were invented the same way, and the page recomputed the index with different rules from the program and hard-coded the lapse rate.
 
----
+So the April write-up's headline, that the passes were bare and the Cascades were at 15% of normal, was an artifact. NRCS's numbers for April 2, 2026 show Olallie Meadows at 24.8 in (46% of median) and Paradise at 38.3 in (53%): a poor year, not a bare one.
 
-## The Pipeline
-
-```
-         ┌─────────────────────────────────────────┐
-         │         8:00 AM PACIFIC                  │
-         │         GitHub Actions wakes up          │
-         └───────────────────┬─────────────────────┘
-                             │
-                             ▼
-              NRCS SNOTEL API  +  NOAA Observations
-              (free · public · no key · been running
-               since before the internet existed)
-                             │
-                             ▼
-                      fetch_wx.py
-                  Python · zero dependencies
-                  stdlib only · no pip
-                             │
-                  snotel_data.csv  ←─── 11 stations
-                  valley_data.csv  ←─── 4 airports
-                             │
-                             ▼
-                    CASCADIA-WX.f90
-                  ┌──────────────────────────────┐
-                  │  FORTRAN · GFortran 13        │
-                  │  Lapse rate computation       │
-                  │  Snow level estimation        │
-                  │  Phase partitioning           │
-                  │  Degree day accumulation      │
-                  │  Atmospheric river index      │
-                  │  Storm classification         │
-                  │  Massif roll-up               │
-                  │  4-section formatted report   │
-                  └──────────────────────────────┘
-                             │
-               cascadia-wx-report.txt  (the printout)
-               analysis.csv            (the machine read)
-                             │
-                             ▼
-                    git commit + push
-                             │
-                             ▼
-              bdgroves.github.io/cascadia-wx
-              reads analysis.csv live · no rebuild
-              amber phosphor · updates on page load
-```
-
----
-
-## Why FORTRAN. Why Now. Why Anyone.
-
-FORTRAN was designed in 1957 by John Backus at IBM. The first successful numerical weather prediction run was performed in 1950 on ENIAC — and when that code was ported to faster machines, it was rewritten in FORTRAN. Today the National Weather Service runs FORTRAN. NCAR runs FORTRAN. ECMWF runs FORTRAN. The WRF model — the backbone of regional weather forecasting — is FORTRAN. The atmosphere has been computed in FORTRAN for 75 years.
-
-How many people are writing new FORTRAN in 2026? Compiling it fresh on WSL, feeding it live government sensor data, running it through GitHub Actions every morning, and serving the output as a web dashboard? Not many. Maybe a handful of grad students who had no choice. Maybe some legacy system maintainers who know too much. And now, apparently, a developer in Lakewood, Washington, who thought it would be fun.
-
-It was fun. It still is. The numbers come in every morning. The atmosphere doesn't care what language you use to understand it — but FORTRAN has been understanding it longer than anything else, and it does it without apology, without overhead, and without anyone asking for permission.
-
-The hatch needs to be maintained. We maintain the hatch.
-
----
-
-## Requirements
-
-| Item | Details |
-|------|---------|
-| FORTRAN | [GFortran](https://gcc.gnu.org/fortran/) 9+ |
-| Python | 3.9+ · zero external dependencies |
-| OS | Linux, macOS, Windows (WSL) |
-| Data | NRCS AWDB + NOAA APIs — free, no key, publicly funded |
+## Run it yourself
 
 ```bash
-# Ubuntu / Debian / WSL
-sudo apt install gfortran
-
-# macOS
-brew install gcc
-```
-
----
-
-## Build & Run
-
-```bash
-python3 fetch_wx.py
-gfortran -O2 -o cascadia-wx CASCADIA-WX.f90 -lm
-./cascadia-wx
+sudo apt install gfortran        # Ubuntu / WSL;  macOS: brew install gcc
+./run_job.sh                     # or: make
 cat cascadia-wx-report.txt
-
-# or just: make
+python3 -m http.server           # then open http://localhost:8000
 ```
 
----
+On Windows, run it in WSL.
 
-## File Structure
+## Sources
 
-```
-cascadia-wx/
-├── CASCADIA-WX.f90              ← FORTRAN source
-├── fetch_wx.py                  ← NRCS + NOAA fetcher
-├── baselines.csv                ← 30-year SNOTEL medians
-├── snotel_data.csv              ← Live snowpack (updated daily)
-├── valley_data.csv              ← Surface temps (updated daily)
-├── cascadia-wx-report.txt       ← The printout (updated daily)
-├── analysis.csv                 ← Machine-readable (updated daily)
-├── index.html                   ← Live dashboard
-├── Makefile
-├── pixi.toml
-└── .github/workflows/cascadia-wx.yml
-```
-
----
-
-## Related Projects
-
-- **[SIERRA-FLOW](https://bdgroves.github.io/sierra-flow-cobol)** — COBOL sister project. Live USGS streamflow, 8 Sierra Nevada gages, percent-of-normal, trend analysis, daily CI/CD. Same idea, different watershed, different decade of computing history.
-- **[Sierra Streamflow Monitor](https://bdgroves.github.io/sierra-streamflow)** — 20-year spaghetti charts, Leaflet map, Tuolumne/Merced/Stanislaus.
-- **[EDGAR](https://bdgroves.github.io/EDGAR)** — Mariners/Rainiers analytics. Nightly updates.
-- **[brooksgroves.com](https://brooksgroves.com)** — All of it, in one place.
+- NRCS Air and Water Database (AWDB) REST API: SNOTEL daily data and 1991–2020 medians. SNOTEL air temperatures carry a known sensor bias that NRCS is working on.
+- NWS radiosonde observations, from the Iowa Environmental Mesonet RAOB archive.
+- Ralph, F. M., et al. (2019). A scale to characterize the strength and impacts of atmospheric rivers. *Bulletin of the American Meteorological Society*, 100(2), 269–289.
+- Bolton, D. (1980). The computation of equivalent potential temperature. *Monthly Weather Review*, 108, 1046–1053.
 
 ---
 
 ```
-  The hatch is maintained.
-  The numbers have been entered.
-  The snowpack has been measured.
-
-  CASCADIA-WX.f90
-  NORMAL TERMINATION.  RETURN CODE: 0.
-  *** END OF JOB ***
+  CASCADIA-WX  V2.0
+  NORMAL TERMINATION.  RETURN CODE 0.
 ```
