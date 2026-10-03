@@ -448,10 +448,12 @@ const cap = s => s ? s[0] + s.slice(1).toLowerCase() : '';
 const ago = v => { const h = Math.round((Date.now() - iso(v).getTime()) / 36e5); return h < 48 ? h + ' h ago' : Math.round(h / 24) + ' days ago'; };
 (async function(){
   const get = async f => { try { return await text(f); } catch(e){ console.warn(e); return null; } };
-  const [sumT, airT, uaT, seT, nrT, balT, stT, anT, maT, reT, daT, logT, repT, srcT] = await Promise.all(
-    ['summary.csv','air.csv','upper_air.csv','sounding_series.csv','normals.csv','balloons.csv','stations.csv','analysis.csv','massif.csv','review.csv','snotel_daily.csv','job-log.txt','cascadia-wx-report.txt','CWX_PHYS.f90'].map(get));
+  const [sumT, airT, uaT, seT, nrT, balT, stT, logT, repT, srcT] = await Promise.all(
+    ['summary.csv','air.csv','upper_air.csv','sounding_series.csv','normals.csv','balloons.csv','stations.csv','job-log.txt','cascadia-wx-report.txt','CWX_PHYS.f90'].map(get));
   if (!sumT){ $('#sites').innerHTML = '<p class="err">Could not load summary.csv.</p>'; return; }
   const S = Object.fromEntries(csv(sumT).map(r => [r.key, r.value]));
+  // the snowpack files exist only when NRCS has answered
+  const [anT, reT] = S.snow === 'yes' ? await Promise.all(['analysis.csv','review.csv'].map(get)) : [null, null];
   const AIR = airT ? csv(airT) : [], B = balT ? csv(balT) : [], ST = stT ? csv(stT) : [];
   const NR = {}; if (nrT) for (const r of csv(nrT)) (NR[r.station] ||= {})[+r.doy] = r;
   const norm = (st, d) => (NR[st] || {})[doy366(d)];
@@ -553,7 +555,7 @@ const ago = v => { const h = Math.round((Date.now() - iso(v).getTime()) / 36e5);
 
   // snowpack, when NRCS has answered
   if (S.snow === 'yes' && anT){
-    const A = csv(anT), M = maT ? csv(maT) : [], R = reT ? csv(reT) : [];
+    const A = csv(anT), R = reT ? csv(reT) : [];
     $('#snow-sub').textContent = `Data for ${S.data_date}. ${S.region_swe_pct ? 'All stations: ' + S.region_swe_pct + '% of median.' : 'The season has barely begun: the median snowpack is still under an inch, so percentages would mean nothing yet.'}${S.last_wy_peak_pct ? ' Last winter peaked at ' + S.last_wy_peak_pct + '% of the median peak.' : ''}`;
     const md = s => s ? dlabel(iso(s)) : '—';
     $('#snow-body').innerHTML = `<div class="panel tbl-wrap"><table><thead><tr><th>Station</th><th class="l">Massif</th><th>Elev, ft</th><th>SWE, in</th><th>Median</th><th>% of median</th><th>Status</th></tr></thead><tbody>${
