@@ -1,0 +1,57 @@
+47.668428 -122.350877 cervus preservedspecimen uwbm mammalogy Seattle, Woodland Park Zoo 2010 
+47.668428 -122.350877 equus preservedspecimen uwbm mammalogy Seattle, Woodland Park Zoo 2007 
+47.668428 -122.350877 cervus preservedspecimen uwbm mammalogy Seattle, Woodland Park Zoo 1983 
+47.668428 -122.350877 equus preservedspecimen uwbm mammalogy Seattle, Woodland Park Zoo 2012 
+47.668428 -122.350877 cervus preservedspecimen uwbm mammalogy Seattle, Woodland Park Zoo 1953 
+47.668428 -122.350877 cervus preservedspecimen uwbm mammalogy Seattle, Woodland Park Zoo 1922 
+47.668428 -122.350877 equus preservedspecimen uwbm mammalogy Seattle, Woodland Park Zoo 1977 
+47.668428 -122.350877 bison preservedspecimen uwbm mammalogy Seattle, Woodland Park Zoo None 
+47.957611 -124.366025 equus preservedspecimen psm None Forks None 
+47.957611 -124.366025 equus preservedspecimen psm mamm Forks None 
+47.802448 -124.104813 cervus preservedspecimen fmnh mammals Upper Hoh River 1915 
+47.802448 -124.104813 cervus preservedspecimen fmnh mammals Upper Hoh R 1915 
+47.802448 -124.104813 cervus preservedspecimen fmnh mammals Upper Hoh R 1915 
+47.802448 -124.104813 cervus preservedspecimen fmnh mammals Upper Hoh River 1915 
+47.802448 -124.104813 cervus preservedspecimen fmnh mammals Upper Hoh R 1915 
+47.802448 -124.104813 cervus preservedspecimen cas mam Hoh River 1917 
+47.802448 -124.104813 cervus preservedspecimen cas mam Hoh River 1917 
+47.802448 -124.104813 cervus preservedspecimen cas mam Hoh River 1917 
+47.88031 -124.180557 cervus preservedspecimen fmnh mammals Olympic Mts, Bogashiel R 1898 
+47.88031 -124.180557 cervus preservedspecimen fmnh mammals Olympic Mts, Bogashiel R 1898 
+47.88031 -124.180557 cervus preservedspecimen fmnh mammals Olympic Mts, Bogashiel R 1898 
+47.88031 -124.180557 cervus preservedspecimen fmnh mammals Olympic Mts, Bogashiel R 1898 
+47.88031 -124.180557 cervus preservedspecimen fmnh mammals Olympic Mts, Bogashiel R 1898 
+47.3806 -121.6453 cervus preservedspecimen uwbm mammalogy Cedar River Watershed; 100 Rd N of Cedar River Delta; T22N R9E Sec 22 1979 
+48.073572 -123.089484 paramylodon fossilspecimen cmc vertebrate paleontology  None Pleistocene
+48.073572 -123.089484 mammuthus fossilspecimen cmc vertebrate paleontology  None Pleistocene
+48.073572 -123.089484 mammuthus fossilspecimen cmc vertebrate paleontology  None Pleistocene
+48.073572 -123.089484 mammuthus fossilspecimen cmc vertebrate paleontology  None Pleistocene
+48.073572 -123.089484 mammuthus fossilspecimen cmc vertebrate paleontology  None Pleistocene
+48.073572 -123.089484 mammuthus fossilspecimen cmc vertebrate paleontology  None Pleistocene
+48.073572 -123.089484 mammuthus fossilspecimen cmc vertebrate paleontology  None Pleistocene
+48.073572 -123.089484 mammuthus fossilspecimen cmc vertebrate paleontology  None Pleistocene
+48.610969 -122.986114 bison preservedspecimen ubcbbm ctc ; Four Winds Camp  near Deer Harbor 1957 
+48.610969 -122.986114 bison preservedspecimen ubcbbm ctc ; Four Winds Camp  near Deer Harbor 1957 
+48.610969 -122.986114 bison preservedspecimen ubcbbm ctc ; Four Winds Camp  near Deer Harbor 1957 
+48.610969 -122.986114 bison preservedspecimen ubcbbm ctc ; Four Winds Camp  near Deer Harbor 1957 
+48.610969 -122.986114 bison preservedspecimen ubcbbm ctc ; Four Winds Camp  near Deer Harbor 1957 
+44.9 -122.8 mammuthus fossilspecimen uomnh cfc UO 4095 P-R/Q Mammoth Site None 
+45.1 -122.8 paramylodon fossilspecimen uomnh cfc UO 3038 Legion Park None 
+45.1 -122.8 paramylodon fossilspecimen uomnh cfc UO 3038 Legion Park None 
+45.1 -122.8 paramylodon fossilspecimen uomnh cfc UO 3867 Legion Park IIA None 
+45.1 -122.8 camelops fossilspecimen uomnh cfc UO 3867 Legion Park IIA None 
+45.1 -122.8 paramylodon fossilspecimen uomnh cfc UO 2843 Mammoth Park (Woodburn High School) None 
+45.1 -122.8 paramylodon fossilspecimen uomnh cfc UO 3867 Legion Park IIA None 
+45.1 -122.8 paramylodon fossilspecimen uomnh cfc UO 3038 Legion Park None 
+45.1 -122.8 paramylodon fossilspecimen uomnh cfc UO 3038 Legion Park None 
+45.2 -123.0 mammut fossilspecimen uomnh cfc UO 2310 Yamhill River None 
+45.2 -123.0 mammuthus fossilspecimen uomnh cfc UO 2319 McMinnville Quadrangle None 
+45.2 -123.0 mammuthus fossilspecimen uomnh cfc UO 2319 McMinnville Quadrangle None 
+45.2 -123.0 equus fossilspecimen uomnh cfc UO 2319 McMinnville Quadrangle None 
+45.2 -123.0 mammuthus fossilspecimen uomnh cfc UO 2319 McMinnville Quadrangle None 
+45.2 -123.0 equus fossilspecimen uomnh cfc UO 2319 McMinnville Quadrangle None 
+45.2 -123.0 mammuthus fossilspecimen uomnh cfc UO 2319 McMinnville Quadrangle None 
+45.2 -123.0 bison fossilspecimen uomnh cfc UO 2319 McMinnville Quadrangle None 
+42.4 -123.1 mammut fossilspecimen uomnh cfc UO 2311 Ward Creek None 
+42.4 -123.1 mammuthus fossilspecimen uomnh cfc UO 2311 Ward Creek None 
+46.6542 -120.5289 bison preservedspecimen uwbm mammalogy Selah; Yakima Valley 1950 
