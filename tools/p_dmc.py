@@ -1,53 +1,46 @@
-"""Probe for 30DMC 2026 days 11, 19, 23: what the data endpoints answer."""
+"""Probe 2 for 30DMC 2026: layer fields."""
 import json, os, urllib.parse, urllib.request
 OUT = "tools/probe_out.txt"
-os.makedirs("tools", exist_ok=True)
 log = open(OUT, "w")
 def p(*a):
     print(*a); print(*a, file=log); log.flush()
 UA = {"User-Agent": "30DayMapChallenge-2026 probe (github.com/bdgroves)"}
-def get(url, data=None, n=4000):
+def j(url):
     try:
-        req = urllib.request.Request(url, data=data, headers=UA)
-        with urllib.request.urlopen(req, timeout=90) as r:
-            b = r.read()
-        return b
+        with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r:
+            return json.loads(r.read())
     except Exception as e:
-        return f"ERR {e}".encode()
-def j(url, data=None):
-    b = get(url, data)
-    try: return json.loads(b)
-    except Exception: p("  not json:", b[:300]); return None
-
-p("=== Pierce County hub search")
-for q in ["siren", "AHAB", "lahar", "warning"]:
-    js = j("https://gisdata-piercecowa.opendata.arcgis.com/api/search/v1/collections/all/items?" + urllib.parse.urlencode({"q": q, "limit": 25}))
-    for f in (js or {}).get("features", []):
-        pr = f.get("properties", {})
-        p(f"  [{q}] {pr.get('title')} | {pr.get('type')} | {pr.get('url')}")
-p("=== ArcGIS Online search")
-for q in ["Pierce County sirens", "lahar siren", "AHAB siren", "Mount Rainier lahar hazard zones", "WSDA Agricultural Land Use", "WSDA crop", "hops Washington crop"]:
-    js = j("https://www.arcgis.com/sharing/rest/search?" + urllib.parse.urlencode({"q": q, "f": "json", "num": 12}))
-    for r in (js or {}).get("results", []):
-        p(f"  [{q}] {r.get('title')} | {r.get('type')} | {r.get('owner')} | {r.get('url')} | id {r.get('id')}")
-p("=== item e46e3932 (MtRainier_lahar_hazards)")
-js = j("https://www.arcgis.com/sharing/rest/content/items/e46e3932e8b54c2b811259c5cd900e18?f=json")
-if js: p("  ", js.get("title"), js.get("type"), js.get("url"), js.get("owner"), (js.get("licenseInfo") or "")[:200])
-p("=== Overpass sirens, Pierce/King/Lewis")
-q = '[out:json][timeout:120];(node["emergency"="siren"](46.55,-122.75,47.45,-121.3);node["siren:purpose"](46.55,-122.75,47.45,-121.3););out;'
-js = j("https://overpass-api.de/api/interpreter", data=urllib.parse.urlencode({"data": q}).encode())
-els = (js or {}).get("elements", [])
-p(f"  {len(els)} siren nodes")
-for e in els[:60]:
-    p(f"  {e['lat']:.4f},{e['lon']:.4f} {json.dumps(e.get('tags', {}))[:200]}")
-p("=== WSDA geoservices")
-for u in ["https://geoservices.agr.wa.gov/arcgis/rest/services?f=json", "https://fortress.wa.gov/agr/gis/arcgis/rest/services?f=json",
-          "https://geoservices.wa.gov/arcgis/rest/services?f=json"]:
-    js = j(u)
-    if js: p("  ", u, "folders", js.get("folders"), "services", [s.get("name") for s in js.get("services", [])][:40])
-p("=== Open Brewery DB")
-for name in ["Kings & Daughters Brewery", "Fort George Brewery", "Superflux Beer Company", "Guinness"]:
-    js = j("https://api.openbrewerydb.org/v1/breweries/search?" + urllib.parse.urlencode({"query": name, "per_page": 3}))
-    for b in (js or [])[:3]:
-        p(f"  [{name}] {b.get('name')} | {b.get('city')}, {b.get('state_province')}, {b.get('country')} | {b.get('latitude')},{b.get('longitude')}")
+        p("  ERR", url, e); return None
+SV = {
+ "ahab": "https://services7.arcgis.com/vUVXhXafpruJFs3l/arcgis/rest/services/AHAB_Points/FeatureServer",
+ "pc_volc": "https://services2.arcgis.com/1UvBaQ5y1ubjUPmd/arcgis/rest/services/Volcanic_Hazards/FeatureServer",
+ "pc_travel": "https://services2.arcgis.com/1UvBaQ5y1ubjUPmd/arcgis/rest/services/Volcanic_Time_of_Travel/FeatureServer",
+ "wsda_yak24": "https://services.arcgis.com/tsh3MgS57Cs86wmq/arcgis/rest/services/WSDA_Crop_2024_joinCropDetail_Yakima/FeatureServer",
+}
+for k, u in SV.items():
+    p(f"=== {k}")
+    js = j(u + "?f=json")
+    if not js: continue
+    p("  layers", [(l["id"], l["name"]) for l in js.get("layers", [])], "copyright", (js.get("copyrightText") or "")[:200], "desc", (js.get("serviceDescription") or "")[:300])
+    for l in js.get("layers", [])[:4]:
+        lj = j(f"{u}/{l['id']}?f=json")
+        if not lj: continue
+        p(f"  layer {l['id']} {l['name']} geom {lj.get('geometryType')} maxRec {lj.get('maxRecordCount')} fields {[f['name'] for f in lj.get('fields', [])]}")
+        c = j(f"{u}/{l['id']}/query?where=1%3D1&returnCountOnly=true&f=json")
+        p("    count", c)
+        s = j(f"{u}/{l['id']}/query?where=1%3D1&outFields=*&returnGeometry=false&resultRecordCount=4&f=json")
+        for f in (s or {}).get("features", [])[:4]:
+            p("    ", json.dumps(f["attributes"])[:400])
+# AHAB in Pierce: distinct purposes
+u = SV["ahab"] + "/0/query?" + urllib.parse.urlencode({"where": "1=1", "geometry": "-122.75,46.6,-121.3,47.45", "geometryType": "esriGeometryEnvelope",
+    "inSR": 4326, "outFields": "*", "returnGeometry": "true", "outSR": 4326, "f": "json"})
+js = j(u)
+fs = (js or {}).get("features", [])
+p(f"=== AHAB in the Pierce box: {len(fs)}")
+for f in fs[:80]:
+    p("  ", f.get("geometry"), json.dumps(f["attributes"])[:260])
+# WSDA hops
+for fld in ["CropType", "CropGroup", "Crop_Type", "CROPTYPE"]:
+    u = SV["wsda_yak24"] + "/0/query?" + urllib.parse.urlencode({"where": f"{fld} LIKE '%Hop%'", "returnCountOnly": "true", "f": "json"})
+    p("  hops by", fld, j(u))
 log.close()
