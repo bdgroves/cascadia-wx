@@ -1,0 +1,38 @@
+=== ahab
+  layers [(0, 'AHAB_Points')] copyright  desc 
+  layer 0 AHAB_Points geom esriGeometryPoint maxRec 2000 fields ['FID', 'RTU', 'Address', 'Name', 'LocationRe', 'City', 'County', 'Elevation', 'Latitude', 'Longitude', 'ListField', 'GlobalID', 'CreationDate', 'Creator', 'EditDate', 'Editor', 'WarningLights', 'SirenDate_StatusUpdate', 'Alerting_Purpose']
+    count {'count': 122, 'serverGens': {'minServerGen': 3174627, 'serverGen': 3174627}}
+     {"FID": 1, "RTU": "001", "Address": "4332 Sucia Dr", "Name": "WH01 SANDY POINT", "LocationRe": "4332 Sucia Dr", "City": "Ferndale", "County": "Whatcom", "Elevation": 2, "Latitude": 48.798908, "Longitude": -122.708371, "ListField": "Healthy", "GlobalID": "e7b7a411-98bb-44ce-b3f5-95abe9dd69a2", "CreationDate": 1764888949627, "Creator": "seoc.gis2", "EditDate": 1791057785668, "Editor": "Plans.GIS", "
+     {"FID": 2, "RTU": "002", "Address": "4112 Hwy 105", "Name": "PA/SH01 SHOALWATER 1", "LocationRe": "4112 Hwy 105", "City": "Tokeland", "County": "Pacific", "Elevation": 2, "Latitude": 46.724038461, "Longitude": -124.02123275, "ListField": "Healthy", "GlobalID": "6a7a8615-31d0-44f3-9693-3419929f22d5", "CreationDate": 1764888949627, "Creator": "seoc.gis2", "EditDate": 1791057786142, "Editor": "Plans.
+     {"FID": 3, "RTU": "003", "Address": "410 Frontier Street", "Name": "CL01 CLALLAM BAY", "LocationRe": "410 Frontier Street (Clallam Bay Water Treatment Plant Manager (360) 963-2397", "City": "Clallam Bay", "County": "Clallam", "Elevation": 40, "Latitude": 48.257181767, "Longitude": -124.253112319, "ListField": "Healthy", "GlobalID": "ad626400-8bfe-45e3-89ff-e13a718c0a4d", "CreationDate": 1764888949
+     {"FID": 4, "RTU": "004", "Address": "Point Hudson Jackson and Water St", "Name": "JE01 POINT HUDSON", "LocationRe": "Point Hudson Jackson and Water St", "City": "Port Townsend", "County": "Jefferson", "Elevation": 3, "Latitude": 48.11615854, "Longitude": -122.750931451, "ListField": "Healthy", "GlobalID": "c74416b8-2f9b-4440-9b93-8d4d65f41d69", "CreationDate": 1764888949627, "Creator": "seoc.gis2"
+=== pc_volc
+  layers [(0, 'Volcanic Hazards')] copyright  desc Polygons showing inundation zones for Case I, II, and III lahars on Mount Rainier, delineated by scientists at the Cascase Volcano Observatory. Please read metadata for additional information.
+  layer 0 Volcanic Hazards geom esriGeometryPolygon maxRec 100 fields ['OBJECTID', 'CASE_1', 'CASE_2', 'CASE_3', 'SYMBOL', 'TIME_ZONE', 'Shape__Area', 'Shape__Length']
+    count {'count': 55}
+     {"OBJECTID": 1, "CASE_1": " ", "CASE_2": " ", "CASE_3": "Y", "SYMBOL": 3, "TIME_ZONE": "", "Shape__Area": 32122615.690185547, "Shape__Length": 39000.880971018814}
+     {"OBJECTID": 2, "CASE_1": " ", "CASE_2": "Y", "CASE_3": " ", "SYMBOL": 2, "TIME_ZONE": "", "Shape__Area": 42110649.05596924, "Shape__Length": 82095.66312888656}
+     {"OBJECTID": 3, "CASE_1": " ", "CASE_2": "Y", "CASE_3": " ", "SYMBOL": 2, "TIME_ZONE": "D", "Shape__Area": 2083459.427734375, "Shape__Length": 16860.134991325594}
+     {"OBJECTID": 4, "CASE_1": "Y", "CASE_2": " ", "CASE_3": "Y", "SYMBOL": 3, "TIME_ZONE": "", "Shape__Area": 69948488.87908936, "Shape__Length": 73325.07321529865}
+=== pc_travel
+  layers [(0, 'Volcanic Time of Travel')] copyright  desc Polylines advising of the estimated warning time for lahars of 10,000,000 to 100,000,000 cubic meters of volume, based on fastest estimated travel time. Read the full metadata for more information.
+  layer 0 Volcanic Time of Travel geom esriGeometryPolyline maxRec 100 fields ['OBJECTID', 'ELTT', 'NISQ_WHITE', 'TIME_ZONE', 'Shape__Length']
+    count {'count': 17}
+     {"OBJECTID": 1, "ELTT": 0.69999998, "NISQ_WHITE": "N", "TIME_ZONE": "B", "Shape__Length": 13529.119146868554}
+     {"OBJECTID": 2, "ELTT": 0.2, "NISQ_WHITE": "N", "TIME_ZONE": "A", "Shape__Length": 16730.215333326396}
+     {"OBJECTID": 3, "ELTT": 1.29999995, "NISQ_WHITE": "N", "TIME_ZONE": "C", "Shape__Length": 20422.798493454622}
+     {"OBJECTID": 4, "ELTT": 1.10000002, "NISQ_WHITE": "N", "TIME_ZONE": "C", "Shape__Length": 12882.790661418758}
+=== wsda_yak24
+  layers [(127, 'WSDA_2024_joinCropDetail')] copyright NRAS (Natural Resource Assessment Section) Washington State Dept of Agriculture desc This feature class contains crop polygons with associated attributes for agricultural land use in Washington.
+  layer 127 WSDA_2024_joinCropDetail geom esriGeometryPolygon maxRec 2000 fields ['OBJECTID', 'Acres', 'Irrigation', 'InitialSurveyDate', 'LastSurveyDate', 'DataSource', 'TRS', 'County', 'CoverCrop', 'ExactAcres', 'CropGroup', 'CropType', 'Notes', 'RotationCrop', 'CropDescription', 'Shape__Area', 'Shape__Length']
+    count {'count': 25149}
+     {"OBJECTID": 1, "Acres": 11, "Irrigation": "Micro-Sprinkler", "InitialSurveyDate": 1022544000000, "LastSurveyDate": 1711670400000, "DataSource": "WSDA", "TRS": "T11R20E3", "County": "Yakima", "CoverCrop": " ", "ExactAcres": 10.719249563023975, "CropGroup": "Orchard", "CropType": "Apple", "Notes": " ", "RotationCrop": "Fallow", "CropDescription": null, "Shape__Area": 466930.51092529297, "Shape__Len
+     {"OBJECTID": 2, "Acres": 3, "Irrigation": "Micro-Sprinkler", "InitialSurveyDate": 1022544000000, "LastSurveyDate": 1716422400000, "DataSource": "WSDA", "TRS": "T11R20E4", "County": "Yakima", "CoverCrop": " ", "ExactAcres": 3.3288294042007025, "CropGroup": "Orchard", "CropType": "Apple", "Notes": " ", "RotationCrop": " ", "CropDescription": null, "Shape__Area": 145003.80865478516, "Shape__Length": 
+     {"OBJECTID": 3, "Acres": 2, "Irrigation": "None", "InitialSurveyDate": 1022544000000, "LastSurveyDate": 1711670400000, "DataSource": "WSDA", "TRS": "T11R20E4", "County": "Yakima", "CoverCrop": " ", "ExactAcres": 2.310153524462939, "CropGroup": "Other", "CropType": "Fallow, Idle", "Notes": " ", "RotationCrop": "Apple", "CropDescription": "Agricultural land left idle and not in current production. T
+     {"OBJECTID": 4, "Acres": 6, "Irrigation": "Drip/Micro-Sprinkler", "InitialSurveyDate": 1543881600000, "LastSurveyDate": 1699401600000, "DataSource": "WSDA", "TRS": "T14R16E23", "County": "Yakima", "CoverCrop": " ", "ExactAcres": 5.805145260783876, "CropGroup": "Orchard", "CropType": "Apple", "Notes": "View from Webert/Humphrey Rd", "RotationCrop": " ", "CropDescription": null, "Shape__Area": 25287
+=== AHAB in the Pierce box: 1
+   {'x': -122.56475580600002, 'y': 47.119753709000065} {"FID": 51, "RTU": "051", "Address": "20 Aviation Dr", "Name": "WA99 EMD TEST SITE", "LocationRe": "20 Aviation Dr Camp Murray WA 98430-5122", "City": "Camp Murray", "County": "Pierce", "Elevation": 267, "Latitude": 47.119753709, "Longitude": -122.564755806, "
+  hops by CropType {'error': {'code': 400, 'message': 'Invalid URL', 'details': ['Invalid URL']}}
+  hops by CropGroup {'error': {'code': 400, 'message': 'Invalid URL', 'details': ['Invalid URL']}}
+  hops by Crop_Type {'error': {'code': 400, 'message': 'Invalid URL', 'details': ['Invalid URL']}}
+  hops by CROPTYPE {'error': {'code': 400, 'message': 'Invalid URL', 'details': ['Invalid URL']}}
