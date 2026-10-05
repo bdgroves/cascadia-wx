@@ -1,5 +1,5 @@
 ====================================================================================================================================
-CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-10-05 10:31 UTC
+CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-10-05 22:04 UTC
                                      QUILLAYUTE - SALEM - MEDFORD - SPOKANE   RAINIER - OLYMPICS - CASCADES
 WATER YEAR 2027                                                    NORMALS: 1991-2020 (BALLOONS AND NRCS)
 ====================================================================================================================================
@@ -9,10 +9,10 @@ SECTION I    THE AIR NOW    LATEST WEATHER BALLOON AT EACH SITE, AGAINST 1991-20
 SITE         BALLOON         FREEZING   NORMAL RANGE  VS NORMAL     SNOW LVL     PW  VS NORMAL       IVT  RIVER         700 HPA WIND
                                    FT    25TH-75TH FT                    FT     MM               KG/M/S
 ------------------------------------------------------------------------------------------------------------------------------------
-Quillayute   2026-10-05T00Z     13918    6455-12419   MUCH ABOVE       12918   13.8  NORMAL            67  NONE          WSW 20 KT
-Salem        2026-10-05T00Z     15247    7766-13157   MUCH ABOVE       14247   14.3  BELOW             60  NONE          SW 9 KT
-Medford      2026-10-05T00Z     14567    9448-13816   ABOVE            13567   19.6  ABOVE             85  NONE          SW 12 KT
-Spokane      2026-10-04T18Z     14883    6968-12370   MUCH ABOVE       13883   16.2  NORMAL            81  NONE          SW 23 KT
+Quillayute   2026-10-05T12Z     13403    6455-12419   ABOVE            12403   20.6  NORMAL           151  NONE          W 30 KT
+Salem        2026-10-05T12Z     14898    7766-13157   MUCH ABOVE       13898   18.7  NORMAL            46  NONE          WSW 13 KT
+Medford      2026-10-05T18Z     13477    9448-13816   NORMAL           12477   20.9  ABOVE             59  NONE          W 12 KT
+Spokane      2026-10-05T18Z     14023    6785-12126   MUCH ABOVE       13023   13.9  NORMAL           120  NONE          W 24 KT
 ------------------------------------------------------------------------------------------------------------------------------------
   VS NORMAL: BELOW THE 10TH PERCENTILE IS MUCH BELOW, 25TH-75TH IS NORMAL, ABOVE THE 90TH IS MUCH ABOVE, FOR BALLOONS
   WITHIN 7 DAYS OF THE DATE, 1991-2020. SNOW LEVEL: 1000 FT BELOW FREEZING, THE NWS RULE OF THUMB.
@@ -20,45 +20,45 @@ Spokane      2026-10-04T18Z     14883    6968-12370   MUCH ABOVE       13883   1
 
 SECTION II   THE COAST, LEVEL BY LEVEL    QUILLAYUTE, WA (KUIL, WMO 72797)
 
-  BALLOON 2026-10-05T00:00Z
+  BALLOON 2026-10-05T12:00Z
     LEVEL     HEIGHT    TEMP   DEWPT  WETBULB    Q G/KG    WIND
       HPA         FT       C       C        C
-      SFC        203    18.0    13.0     15.0      9.26    W 3 KT
-     1000        502    16.2    12.1     13.8      8.82    WNW 3 KT
-      925       2680    16.2     3.2      9.5      5.18    WNW 3 KT
-      850       5036    16.6   -10.4      5.5      2.04    WNW 8 KT
-      700      10351     7.2   -26.8     -2.4      0.61    WSW 20 KT
-      500      19094   -12.1   -32.1    -16.2      0.52    WSW 34 KT
-      300      31234   -38.9   -45.9    -39.4      0.21    SW 37 KT
+      SFC        203     9.0     9.0      9.0      7.07    E 1 KT
+     1000        561    11.0    10.5     10.7      7.93    NNE 6 KT
+      925       2710    12.6     9.9     11.0      8.24    NW 15 KT
+      850       5039    12.8     3.8      8.0      5.89    WNW 10 KT
+      700      10312     5.6   -19.4     -2.5      1.18    W 30 KT
+      500      19062   -11.5   -26.5    -15.2      0.88    WSW 41 KT
+      300      31266   -39.1   -41.3    -39.3      0.34    W 36 KT
 
 SECTION III  ATMOSPHERIC RIVERS, WATER YEAR 2027 (SINCE OCT 1)
 
 SITE         BALLOONS   AT AR STRENGTH   STRONGEST IVT  WHEN               STRENGTH
 ----------------------------------------------------------------------------------------------------
-Quillayute           9                2            302  2026-10-02T00:00Z  WEAK
-Salem                6                0            168  2026-10-01T00:00Z  NONE
-Medford              9                0             85  2026-10-05T00:00Z  NONE
-Spokane              7                0            168  2026-10-01T18:00Z  NONE
+Quillayute          10                2            302  2026-10-02T00:00Z  WEAK
+Salem                7                0            168  2026-10-01T00:00Z  NONE
+Medford             10                0             85  2026-10-05T00:00Z  NONE
+Spokane              8                0            168  2026-10-01T18:00Z  NONE
   ONE BALLOON IS ONE MOMENT AT ONE PLACE; THE OFFICIAL AR SCALE ALSO WEIGHS HOW LONG A RIVER LASTS.
 
 SECTION IV   RECENT BALLOONS    FREEZING LEVEL (FT) AND IVT (KG/M/S)
 
   BALLOON                    Quillayute               Salem             Medford             Spokane
+  2026-10-05T18:00                  --                  --       13477      59       14023     120
+  2026-10-05T12:00       13403     151       14898      46                  --                  --
   2026-10-05T00:00       13918      67       15247      60       14567      85                  --
   2026-10-04T18:00                  --                  --       15242      63       14883      81
   2026-10-04T12:00       14374      35       15297      52                  --                  --
   2026-10-04T00:00       14605      28       15799      38       15508      56                  --
   2026-10-03T18:00                  --                  --       15325      45       13730      26
   2026-10-03T12:00       13961      66       15235      22                  --                  --
-  2026-10-03T06:00                  --                  --                  --       12986      92
-  2026-10-03T00:00       13663      79                  --       15343      45                  --
 
 SECTION V    TEMPERATURE WITH HEIGHT
 
-  FREE AIR 850-700 HPA, Quillayute   ....  5.80 C PER KM
-  FREE AIR 850-700 HPA, Salem        ....  5.96 C PER KM
-  FREE AIR 850-700 HPA, Medford      ....  7.77 C PER KM
-  FREE AIR 850-700 HPA, Spokane      ....  5.53 C PER KM
+  FREE AIR 850-700 HPA, Quillayute   ....  4.48 C PER KM
+  FREE AIR 850-700 HPA, Salem        ....  5.27 C PER KM
+  FREE AIR 850-700 HPA, Medford      ....  8.53 C PER KM
+  FREE AIR 850-700 HPA, Spokane      ....  4.33 C PER KM
   MOUNTAIN SURFACE (SNOTEL FIT) ..........  0.76 C PER KM   R-SQUARED 0.02   STATIONS 12   FOR 2026-10-04
   DRY ADIABATIC IS 9.8 C PER KM; THE STANDARD ATMOSPHERE 6.5.
 
@@ -105,5 +105,5 @@ Bumping Ridge    CASCADES     19.9  MAR 15         27.2  APR 06      73   MAY 06
 ====================================================================================================================================
 MESSAGES     NONE
 SOURCES      NWS RADIOSONDES VIA THE IOWA ENVIRONMENTAL MESONET  -  NRCS AWDB (SNOTEL)
-END OF REPORT   4 BALLOON SITES   2878 BALLOONS ON FILE   RETURN CODE 0
+END OF REPORT   4 BALLOON SITES   2882 BALLOONS ON FILE   RETURN CODE 0
 ====================================================================================================================================
