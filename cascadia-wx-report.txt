@@ -1,5 +1,5 @@
 ====================================================================================================================================
-CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-10-06 20:31 UTC
+CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-10-07 10:19 UTC
                                      QUILLAYUTE - SALEM - MEDFORD - SPOKANE   RAINIER - OLYMPICS - CASCADES
 WATER YEAR 2027                                                    NORMALS: 1991-2020 (BALLOONS AND NRCS)
 ====================================================================================================================================
@@ -9,9 +9,9 @@ SECTION I    THE AIR NOW    LATEST WEATHER BALLOON AT EACH SITE, AGAINST 1991-20
 SITE         BALLOON         FREEZING   NORMAL RANGE  VS NORMAL     SNOW LVL     PW  VS NORMAL       IVT  RIVER         700 HPA WIND
                                    FT    25TH-75TH FT                    FT     MM               KG/M/S
 ------------------------------------------------------------------------------------------------------------------------------------
-Quillayute   2026-10-06T12Z     13776    6355-12201   MUCH ABOVE       12776   15.9  NORMAL           110  NONE          W 14 KT
-Salem        2026-10-06T12Z     14977    7530-12993   MUCH ABOVE       13977   19.5  NORMAL            64  NONE          W 17 KT
-Medford      2026-10-06T18Z     14795    9286-13692   ABOVE            13795   18.7  NORMAL            40  NONE          SW 14 KT
+Quillayute   2026-10-07T00Z     13953    6301-11999   MUCH ABOVE       12953   19.2  NORMAL           112  NONE          W 10 KT
+Salem        2026-10-07T00Z     15017    7394-12814   MUCH ABOVE       14017   12.0  BELOW             31  NONE          --
+Medford      2026-10-07T00Z     14696    9186-13593   ABOVE            13696   18.9  ABOVE             38  NONE          S 12 KT
 Spokane      2026-10-06T18Z     13788    6711-11911   MUCH ABOVE       12788   12.6  NORMAL            81  NONE          NNW 11 KT
 ------------------------------------------------------------------------------------------------------------------------------------
   VS NORMAL: BELOW THE 10TH PERCENTILE IS MUCH BELOW, 25TH-75TH IS NORMAL, ABOVE THE 90TH IS MUCH ABOVE, FOR BALLOONS
@@ -20,30 +20,31 @@ Spokane      2026-10-06T18Z     13788    6711-11911   MUCH ABOVE       12788   1
 
 SECTION II   THE COAST, LEVEL BY LEVEL    QUILLAYUTE, WA (KUIL, WMO 72797)
 
-  BALLOON 2026-10-06T12:00Z
+  BALLOON 2026-10-07T00:00Z
     LEVEL     HEIGHT    TEMP   DEWPT  WETBULB    Q G/KG    WIND
       HPA         FT       C       C        C
-      SFC        203    12.2    11.6     11.9      8.40    NNE 2 KT
-     1000        620    11.0    10.9     10.9      8.15    N 6 KT
-      925       2756    12.0     1.0      6.7      4.43    NNW 4 KT
-      850       5072    11.6   -17.4      1.9      1.15    W 8 KT
-      700      10338     6.0   -20.0     -2.4      1.12    W 14 KT
-      500      19094   -10.3   -17.3    -12.6      1.97    W 34 KT
-      300      31299   -39.5   -49.5    -40.1      0.14    W 48 KT
+      SFC        203    17.6    11.6     14.1      8.42    NNW 5 KT
+     1000        584    15.6    11.3     13.1      8.37    NNW 6 KT
+      925       2756    14.8     5.8      9.9      6.22    N 10 KT
+      850       5085    11.6    -5.4      4.2      3.00    WNW 11 KT
+      700      10364     5.8   -15.2     -1.8      1.68    W 10 KT
+      500      19127   -10.9   -18.9    -13.4      1.72    WSW 30 KT
+      300      31332   -39.3   -42.5    -39.6      0.30    WSW 44 KT
 
 SECTION III  ATMOSPHERIC RIVERS, WATER YEAR 2027 (SINCE OCT 1)
 
 SITE         BALLOONS   AT AR STRENGTH   STRONGEST IVT  WHEN               STRENGTH
 ----------------------------------------------------------------------------------------------------
-Quillayute          12                2            302  2026-10-02T00:00Z  WEAK
-Salem                9                0            168  2026-10-01T00:00Z  NONE
-Medford             12                0             85  2026-10-05T00:00Z  NONE
+Quillayute          13                2            302  2026-10-02T00:00Z  WEAK
+Salem               10                0            168  2026-10-01T00:00Z  NONE
+Medford             13                0             85  2026-10-05T00:00Z  NONE
 Spokane              9                0            168  2026-10-01T18:00Z  NONE
   ONE BALLOON IS ONE MOMENT AT ONE PLACE; THE OFFICIAL AR SCALE ALSO WEIGHS HOW LONG A RIVER LASTS.
 
 SECTION IV   RECENT BALLOONS    FREEZING LEVEL (FT) AND IVT (KG/M/S)
 
   BALLOON                    Quillayute               Salem             Medford             Spokane
+  2026-10-07T00:00       13953     112       15017      31       14696      38                  --
   2026-10-06T18:00                  --                  --       14795      40       13788      81
   2026-10-06T12:00       13776     110       14977      64                  --                  --
   2026-10-06T00:00       14111     118       14647      46       14313      66                  --
@@ -51,40 +52,39 @@ SECTION IV   RECENT BALLOONS    FREEZING LEVEL (FT) AND IVT (KG/M/S)
   2026-10-05T12:00       13403     151       14898      46                  --                  --
   2026-10-05T00:00       13918      67       15247      60       14567      85                  --
   2026-10-04T18:00                  --                  --       15242      63       14883      81
-  2026-10-04T12:00       14374      35       15297      52                  --                  --
 
 SECTION V    TEMPERATURE WITH HEIGHT
 
-  FREE AIR 850-700 HPA, Quillayute   ....  3.49 C PER KM
-  FREE AIR 850-700 HPA, Salem        ....  4.06 C PER KM
-  FREE AIR 850-700 HPA, Medford      ....  7.43 C PER KM
+  FREE AIR 850-700 HPA, Quillayute   ....  3.60 C PER KM
+  FREE AIR 850-700 HPA, Salem        ....  4.30 C PER KM
+  FREE AIR 850-700 HPA, Medford      ....  8.86 C PER KM
   FREE AIR 850-700 HPA, Spokane      ....  5.08 C PER KM
-  MOUNTAIN SURFACE (SNOTEL FIT) ..........  1.72 C PER KM   R-SQUARED 0.21   STATIONS 12   FOR 2026-10-05
+  MOUNTAIN SURFACE (SNOTEL FIT) ..........  0.28 C PER KM   R-SQUARED 0.00   STATIONS 12   FOR 2026-10-06
   DRY ADIABATIC IS 9.8 C PER KM; THE STANDARD ATMOSPHERE 6.5.
 
 SECTION VI   SNOWPACK    NRCS SNOTEL, 12 STATIONS, AGAINST NRCS 1991-2020 MEDIANS
 
-  DATA FOR 2026-10-05
+  DATA FOR 2026-10-06
 STATION          MASSIF     ELEV    SWE  MEDIAN   %MED  7-DAY   DEPTH   WY PRECIP  MEDIAN   %MED   TAVG  STATUS
 ------------------------------------------------------------------------------------------------------------------------------------
-Paradise         RAINIER    5150     0.0     0.0     --    0.0       0        0.0     0.5     --   10.6  OK
-Cayuse Pass      RAINIER    5260     0.1     0.0     --    0.1      --         --      --     --   11.6  OK
-Burnt Mountain   RAINIER    4160     0.1     0.0     --    0.1       0        0.0     0.7     --   11.9  OK
-Corral Pass      RAINIER    5810     0.0     0.0     --    0.0       0         --      --     --   10.8  OK
-Dungeness        OLYMPICS   3990     0.0     0.0     --    0.0       5        0.0     0.1     --   12.0  OK
-Buckinghorse     OLYMPICS   4850     0.0     0.0     --    0.0       0         --      --     --   12.2  OK
-Waterhole        OLYMPICS   5010     0.0     0.0     --    0.0       1        0.0     0.2     --    9.9  OK
-Olallie Meadows  CASCADES   4010     0.0     0.0     --    0.0       0        0.0     0.6     --   11.8  OK
-Stevens Pass     CASCADES   3940     0.0     0.0     --    0.0       0         --      --     --   10.4  OK
-Stampede Pass    CASCADES   3850     0.1     0.0     --    0.1      --         --      --     --   11.8  OK
-Elbow Lake       CASCADES   3050     0.4     0.0     --    0.4       0        0.0     0.8     --   12.5  OK
-Bumping Ridge    CASCADES   4600     0.1     0.0     --    0.1       0         --      --     --   12.6  OK
+Paradise         RAINIER    5150     0.0     0.0     --    0.0       0        0.0     0.6     --   11.7  OK
+Cayuse Pass      RAINIER    5260     0.2     0.0     --    0.2       1         --      --     --   12.0  OK
+Burnt Mountain   RAINIER    4160     0.1     0.0     --    0.1       0        0.0     0.7     --   12.6  OK
+Corral Pass      RAINIER    5810     0.1     0.0     --    0.1       0        0.1     0.5     --   11.6  OK
+Dungeness        OLYMPICS   3990     0.0     0.0     --    0.0       5        0.0     0.1     --   10.6  OK
+Buckinghorse     OLYMPICS   4850     0.0     0.0     --    0.0       0         --      --     --   11.6  OK
+Waterhole        OLYMPICS   5010     0.0     0.0     --    0.0       1        0.0     0.3     --    9.0  OK
+Olallie Meadows  CASCADES   4010     0.0     0.0     --    0.0       0        0.0     1.0      0   11.5  OK
+Stevens Pass     CASCADES   3940     0.0     0.0     --    0.0       0         --      --     --   10.3  OK
+Stampede Pass    CASCADES   3850     0.1     0.0     --    0.1       0         --      --     --   11.7  OK
+Elbow Lake       CASCADES   3050     0.4     0.0     --    0.4       0        0.1     1.3      8   12.0  OK
+Bumping Ridge    CASCADES   4600     0.1     0.0     --    0.1       0         --      --     --   12.8  OK
 ------------------------------------------------------------------------------------------------------------------------------------
 MASSIF     STATIONS     SWE  MEDIAN   %MED  CLASS                 WY PRECIP  MEDIAN   %MED
-RAINIER          4      0.2     0.0     --  SEASON NOT STARTED           0.0     1.2     --
-OLYMPICS         3      0.0     0.0     --  SEASON NOT STARTED           0.0     0.3     --
-CASCADES         5      0.6     0.0     --  SEASON NOT STARTED           0.0     1.4     --
-ALL             12      0.8     0.0     --  SEASON NOT STARTED           0.0     2.9     --
+RAINIER          4      0.4     0.0     --  SEASON NOT STARTED           0.1     1.8     --
+OLYMPICS         3      0.0     0.0     --  SEASON NOT STARTED           0.0     0.4     --
+CASCADES         5      0.6     0.0     --  SEASON NOT STARTED           0.1     2.3     --
+ALL             12      1.0     0.0     --  SEASON NOT STARTED           0.2     4.5     --
 
   WATER YEAR 2026 IN REVIEW
 STATION          MASSIF       PEAK  DATE    MEDIAN PEAK  DATE      %MED   MELT-OUT  MEDIAN   DAYS EARLY
@@ -105,5 +105,5 @@ Bumping Ridge    CASCADES     19.9  MAR 15         27.2  APR 06      73   MAY 06
 ====================================================================================================================================
 MESSAGES     NONE
 SOURCES      NWS RADIOSONDES VIA THE IOWA ENVIRONMENTAL MESONET  -  NRCS AWDB (SNOTEL)
-END OF REPORT   4 BALLOON SITES   2889 BALLOONS ON FILE   RETURN CODE 0
+END OF REPORT   4 BALLOON SITES   2892 BALLOONS ON FILE   RETURN CODE 0
 ====================================================================================================================================
