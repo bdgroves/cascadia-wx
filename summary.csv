@@ -1,25 +1,25 @@
 key,value
 version,CASCADIA-WX V3.0
-run_utc,2026-10-10 09:54
+run_utc,2026-10-10 19:19
 pacific_date,2026-10-10
 water_year,2027
 return_code,0
 balloon_sites,4
 balloon_sites_current,4
-sounding_valid_utc,2026-10-10T00:00Z
-freezing_level_ft,5634
+sounding_valid_utc,2026-10-10T12:00Z
+freezing_level_ft,5367
 freezing_vs_normal,BELOW
 freezing_normal_p50,8739
-wetbulb_zero_ft,4375
-snow_level_ft,4634
-pw_mm,10.0
-pw_vs_normal,MUCH BELOW
-ivt,124
-ivt_from,WNW
+wetbulb_zero_ft,3829
+snow_level_ft,4367
+pw_mm,11.1
+pw_vs_normal,BELOW
+ivt,58
+ivt_from,NW
 ar_category,NONE
-t850_c,1.8
-free_air_lapse_c_km,5.13
-w700,WNW 26 kt
+t850_c,0.8
+free_air_lapse_c_km,5.00
+w700,NW 14 kt
 snow,yes
 data_date,2026-10-09
 stations,12
