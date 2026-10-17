@@ -1,9 +1,9 @@
-JOB CASCADWX   2026-10-16 18:50:25 UTC
+JOB CASCADWX   2026-10-17 07:51:22 UTC
 HOST           Linux x86_64 · GNU Fortran (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 · Python 3.12.3
-RUN            GitHub Actions run 232 (schedule)
+RUN            GitHub Actions run 233 (schedule)
 
-STEP FETCH      RC=0000   23.83s  timeout 1200 python3 -u fetch_wx.py
-    CASCADIA-WX FETCH  2026-10-16 18:50 UTC  (Pacific date 2026-10-16)
+STEP FETCH      RC=0000   19.52s  timeout 1200 python3 -u fetch_wx.py
+    CASCADIA-WX FETCH  2026-10-17 07:51 UTC  (Pacific date 2026-10-17)
     NRCS SNOTEL
       679:WA:SNTL  Paradise          380 days, last 2026-10-15
       1085:WA:SNTL Cayuse Pass       380 days, last 2026-10-15
@@ -19,24 +19,25 @@ STEP FETCH      RC=0000   23.83s  timeout 1200 python3 -u fetch_wx.py
       375:WA:SNTL  Bumping Ridge     380 days, last 2026-10-15
       wrote 4560 station-days to snotel_daily.csv
     NWS radiosondes
-      KUIL  Quillayute    20 soundings since 2026-10-06 18Z, latest 2026101612
-      KSLE  Salem         18 soundings since 2026-10-06 18Z, latest 2026101612
-      KMFR  Medford       19 soundings since 2026-10-06 18Z, latest 2026101600
-      KOTX  Spokane       12 soundings since 2026-10-06 18Z, latest 2026101518
+      KUIL  Quillayute    20 soundings since 2026-10-07 07Z, latest 2026101700
+      KSLE  Salem         18 soundings since 2026-10-07 07Z, latest 2026101700
+      KMFR  Medford       20 soundings since 2026-10-07 07Z, latest 2026101700
+      KOTX  Spokane       12 soundings since 2026-10-07 07Z, latest 2026101618
 
-STEP COMPILE    RC=0000    5.20s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
+STEP COMPILE    RC=0000    3.56s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
 
 STEP NORMALS    skipped: normals.csv is current (see normals-log.txt)
 
-STEP CASCADWX   RC=0000    0.20s  timeout 300 ./cascadia-wx
-    CWX000I CASCADIA-WX V3.0 STARTED 2026-10-16 18:50:54
+STEP CASCADWX   RC=0004    0.18s  timeout 300 ./cascadia-wx
+    CWX000I CASCADIA-WX V3.0 STARTED 2026-10-17 07:51:45
     CWX001I BALLOON SITES ..............     4
     CWX002I NORMALS LOADED (SITE-DAYS) .  1464
-    CWX004I SOUNDINGS READ .............    69
-    CWX005I SOUNDINGS ON FILE ..........  2961
+    CWX004I SOUNDINGS READ .............    70
+    CWX005I SOUNDINGS ON FILE ..........  2966
     CWX003I SNOTEL STATION-DAYS .........  4560
     CWX006I REPORT WRITTEN: cascadia-wx-report.txt
     CWX007I RESULTS WRITTEN: air.csv upper_air.csv sounding_series.csv summary.csv
-    CWX999I CASCADIA-WX V3.0 ENDED  RC= 0
+    CWX011W NRCS DATA ARE 2 DAYS OLD (LATEST 2026-10-15)
+    CWX999I CASCADIA-WX V3.0 ENDED  RC= 4
 
-JOB CASCADWX   ENDED  MAXCC=0000  29.2s
+JOB CASCADWX   ENDED  MAXCC=0004  23.3s
