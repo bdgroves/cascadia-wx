@@ -1,43 +1,42 @@
-JOB CASCADWX   2026-10-18 08:05:34 UTC
+JOB CASCADWX   2026-10-18 18:11:15 UTC
 HOST           Linux x86_64 · GNU Fortran (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 · Python 3.12.3
-RUN            GitHub Actions run 235 (schedule)
+RUN            GitHub Actions run 236 (schedule)
 
-STEP FETCH      RC=0000   21.67s  timeout 1200 python3 -u fetch_wx.py
-    CASCADIA-WX FETCH  2026-10-18 08:05 UTC  (Pacific date 2026-10-18)
+STEP FETCH      RC=0000   21.36s  timeout 1200 python3 -u fetch_wx.py
+    CASCADIA-WX FETCH  2026-10-18 18:11 UTC  (Pacific date 2026-10-18)
     NRCS SNOTEL
-      679:WA:SNTL  Paradise          381 days, last 2026-10-16
-      1085:WA:SNTL Cayuse Pass       381 days, last 2026-10-16
-      942:WA:SNTL  Burnt Mountain    381 days, last 2026-10-16
-      418:WA:SNTL  Corral Pass       381 days, last 2026-10-16
-      943:WA:SNTL  Dungeness         381 days, last 2026-10-16
-      1107:WA:SNTL Buckinghorse      381 days, last 2026-10-16
-      974:WA:SNTL  Waterhole         381 days, last 2026-10-16
-      672:WA:SNTL  Olallie Meadows   381 days, last 2026-10-16
-      791:WA:SNTL  Stevens Pass      381 days, last 2026-10-16
-      788:WA:SNTL  Stampede Pass     381 days, last 2026-10-16
-      910:WA:SNTL  Elbow Lake        381 days, last 2026-10-16
-      375:WA:SNTL  Bumping Ridge     381 days, last 2026-10-16
-      wrote 4572 station-days to snotel_daily.csv
+      679:WA:SNTL  Paradise          382 days, last 2026-10-17
+      1085:WA:SNTL Cayuse Pass       382 days, last 2026-10-17
+      942:WA:SNTL  Burnt Mountain    382 days, last 2026-10-17
+      418:WA:SNTL  Corral Pass       382 days, last 2026-10-17
+      943:WA:SNTL  Dungeness         382 days, last 2026-10-17
+      1107:WA:SNTL Buckinghorse      382 days, last 2026-10-17
+      974:WA:SNTL  Waterhole         382 days, last 2026-10-17
+      672:WA:SNTL  Olallie Meadows   382 days, last 2026-10-17
+      791:WA:SNTL  Stevens Pass      382 days, last 2026-10-17
+      788:WA:SNTL  Stampede Pass     382 days, last 2026-10-17
+      910:WA:SNTL  Elbow Lake        382 days, last 2026-10-17
+      375:WA:SNTL  Bumping Ridge     382 days, last 2026-10-17
+      wrote 4584 station-days to snotel_daily.csv
     NWS radiosondes
-      KUIL  Quillayute    20 soundings since 2026-10-08 08Z, latest 2026101800
-      KSLE  Salem         19 soundings since 2026-10-08 08Z, latest 2026101800
-      KMFR  Medford       20 soundings since 2026-10-08 08Z, latest 2026101800
-      KOTX  Spokane       11 soundings since 2026-10-08 08Z, latest 2026101718
+      KUIL  Quillayute    20 soundings since 2026-10-08 18Z, latest 2026101812
+      KSLE  Salem         20 soundings since 2026-10-08 18Z, latest 2026101812
+      KMFR  Medford       19 soundings since 2026-10-08 18Z, latest 2026101800
+      KOTX  Spokane       10 soundings since 2026-10-08 18Z, latest 2026101718
 
-STEP COMPILE    RC=0000    4.22s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
+STEP COMPILE    RC=0000    2.92s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
 
 STEP NORMALS    skipped: normals.csv is current (see normals-log.txt)
 
-STEP CASCADWX   RC=0004    0.15s  timeout 300 ./cascadia-wx
-    CWX000I CASCADIA-WX V3.0 STARTED 2026-10-18 08:06:00
+STEP CASCADWX   RC=0000    0.13s  timeout 300 ./cascadia-wx
+    CWX000I CASCADIA-WX V3.0 STARTED 2026-10-18 18:11:39
     CWX001I BALLOON SITES ..............     4
     CWX002I NORMALS LOADED (SITE-DAYS) .  1464
-    CWX004I SOUNDINGS READ .............    70
-    CWX005I SOUNDINGS ON FILE ..........  2973
-    CWX003I SNOTEL STATION-DAYS .........  4572
+    CWX004I SOUNDINGS READ .............    69
+    CWX005I SOUNDINGS ON FILE ..........  2975
+    CWX003I SNOTEL STATION-DAYS .........  4584
     CWX006I REPORT WRITTEN: cascadia-wx-report.txt
     CWX007I RESULTS WRITTEN: air.csv upper_air.csv sounding_series.csv summary.csv
-    CWX011W NRCS DATA ARE 2 DAYS OLD (LATEST 2026-10-16)
-    CWX999I CASCADIA-WX V3.0 ENDED  RC= 4
+    CWX999I CASCADIA-WX V3.0 ENDED  RC= 0
 
-JOB CASCADWX   ENDED  MAXCC=0004  26.1s
+JOB CASCADWX   ENDED  MAXCC=0000  24.4s
