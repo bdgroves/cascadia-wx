@@ -1,6 +1,6 @@
 triplet,name,massif,elev_ft,lat,lon,data_date,last_date,swe_in,swe_median_in,swe_pct,swe_7day_in,depth_in,wy_precip_in,wy_precip_median_in,wy_precip_pct,tavg_c,status
 679:WA:SNTL,Paradise,RAINIER,5150,46.78266,-121.74767,2026-10-19,2026-10-18,,,,,,,,,,STALE
-1085:WA:SNTL,Cayuse Pass,RAINIER,5260,46.86956,-121.53434,2026-10-19,2026-10-19,0.1,0.0,,0.1,1,,,,6.5,OK
+1085:WA:SNTL,Cayuse Pass,RAINIER,5260,46.86956,-121.53434,2026-10-19,2026-10-19,0.0,0.0,,0.0,0,,2.8,,6.5,OK
 942:WA:SNTL,Burnt Mountain,RAINIER,4160,47.04440,-121.94032,2026-10-19,2026-10-19,0.1,0.0,,0.1,0,0.9,3.8,24,5.7,OK
 418:WA:SNTL,Corral Pass,RAINIER,5810,47.01872,-121.46464,2026-10-19,2026-10-19,0.1,0.1,,0.1,1,0.1,2.2,5,4.5,OK
 943:WA:SNTL,Dungeness,OLYMPICS,3990,47.87220,-123.07879,2026-10-19,2026-10-19,0.0,0.0,,0.0,0,0.1,1.9,5,5.8,OK

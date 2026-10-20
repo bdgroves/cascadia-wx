@@ -1,39 +1,39 @@
-JOB CASCADWX   2026-10-20 08:36:52 UTC
+JOB CASCADWX   2026-10-20 19:20:46 UTC
 HOST           Linux x86_64 · GNU Fortran (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 · Python 3.12.3
-RUN            GitHub Actions run 239 (schedule)
+RUN            GitHub Actions run 240 (schedule)
 
-STEP FETCH      RC=0000   20.18s  timeout 1200 python3 -u fetch_wx.py
-    CASCADIA-WX FETCH  2026-10-20 08:36 UTC  (Pacific date 2026-10-20)
+STEP FETCH      RC=0004  166.58s  timeout 1200 python3 -u fetch_wx.py
+    CASCADIA-WX FETCH  2026-10-20 19:20 UTC  (Pacific date 2026-10-20)
     NRCS SNOTEL
-      679:WA:SNTL  Paradise          383 days, last 2026-10-18
+      679:WA:SNTL  Paradise         FAILED (HTTP Error 403: Forbidden); kept 383 days from the last run, last 2026-10-18
       1085:WA:SNTL Cayuse Pass       384 days, last 2026-10-19
-      942:WA:SNTL  Burnt Mountain    384 days, last 2026-10-19
-      418:WA:SNTL  Corral Pass       384 days, last 2026-10-19
-      943:WA:SNTL  Dungeness         384 days, last 2026-10-19
-      1107:WA:SNTL Buckinghorse      383 days, last 2026-10-18
-      974:WA:SNTL  Waterhole         384 days, last 2026-10-19
-      672:WA:SNTL  Olallie Meadows   384 days, last 2026-10-19
-      791:WA:SNTL  Stevens Pass      383 days, last 2026-10-18
-      788:WA:SNTL  Stampede Pass     384 days, last 2026-10-19
-      910:WA:SNTL  Elbow Lake        384 days, last 2026-10-19
+      942:WA:SNTL  Burnt Mountain   FAILED (HTTP Error 403: Forbidden); kept 384 days from the last run, last 2026-10-19
+      418:WA:SNTL  Corral Pass      FAILED (HTTP Error 403: Forbidden); kept 384 days from the last run, last 2026-10-19
+      943:WA:SNTL  Dungeness        FAILED (HTTP Error 403: Forbidden); kept 384 days from the last run, last 2026-10-19
+      1107:WA:SNTL Buckinghorse     FAILED (HTTP Error 403: Forbidden); kept 383 days from the last run, last 2026-10-18
+      974:WA:SNTL  Waterhole        FAILED (HTTP Error 403: Forbidden); kept 384 days from the last run, last 2026-10-19
+      672:WA:SNTL  Olallie Meadows  FAILED (HTTP Error 403: Forbidden); kept 384 days from the last run, last 2026-10-19
+      791:WA:SNTL  Stevens Pass     FAILED (HTTP Error 403: Forbidden); kept 383 days from the last run, last 2026-10-18
+      788:WA:SNTL  Stampede Pass    FAILED (HTTP Error 403: Forbidden); kept 384 days from the last run, last 2026-10-19
+      910:WA:SNTL  Elbow Lake       FAILED (HTTP Error 403: Forbidden); kept 384 days from the last run, last 2026-10-19
       375:WA:SNTL  Bumping Ridge     384 days, last 2026-10-19
       wrote 4605 station-days to snotel_daily.csv
     NWS radiosondes
-      KUIL  Quillayute    20 soundings since 2026-10-10 08Z, latest 2026102000
-      KSLE  Salem         20 soundings since 2026-10-10 08Z, latest 2026102000
-      KMFR  Medford       20 soundings since 2026-10-10 08Z, latest 2026102000
-      KOTX  Spokane       17 soundings since 2026-10-10 08Z, latest 2026101918
+      KUIL  Quillayute    20 soundings since 2026-10-10 19Z, latest 2026102012
+      KSLE  Salem         20 soundings since 2026-10-10 19Z, latest 2026102012
+      KMFR  Medford       20 soundings since 2026-10-10 19Z, latest 2026102018
+      KOTX  Spokane       17 soundings since 2026-10-10 19Z, latest 2026102018
 
-STEP COMPILE    RC=0000    4.62s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
+STEP COMPILE    RC=0000    5.46s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
 
 STEP NORMALS    skipped: normals.csv is current (see normals-log.txt)
 
-STEP CASCADWX   RC=0004    0.24s  timeout 300 ./cascadia-wx
-    CWX000I CASCADIA-WX V3.0 STARTED 2026-10-20 08:37:17
+STEP CASCADWX   RC=0004    0.22s  timeout 300 ./cascadia-wx
+    CWX000I CASCADIA-WX V3.0 STARTED 2026-10-20 19:23:38
     CWX001I BALLOON SITES ..............     4
     CWX002I NORMALS LOADED (SITE-DAYS) .  1464
     CWX004I SOUNDINGS READ .............    77
-    CWX005I SOUNDINGS ON FILE ..........  2995
+    CWX005I SOUNDINGS ON FILE ..........  2999
     CWX003I SNOTEL STATION-DAYS .........  4605
     CWX006I REPORT WRITTEN: cascadia-wx-report.txt
     CWX007I RESULTS WRITTEN: air.csv upper_air.csv sounding_series.csv summary.csv
@@ -42,4 +42,4 @@ STEP CASCADWX   RC=0004    0.24s  timeout 300 ./cascadia-wx
     CWX013W Stevens Pass: LAST DATA 2026-10-18
     CWX999I CASCADIA-WX V3.0 ENDED  RC= 4
 
-JOB CASCADWX   ENDED  MAXCC=0004  25.1s
+JOB CASCADWX   ENDED  MAXCC=0004  172.3s
