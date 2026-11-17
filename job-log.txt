@@ -1,42 +1,43 @@
-JOB CASCADWX   2026-11-16 23:46:00 UTC
+JOB CASCADWX   2026-11-17 11:57:03 UTC
 HOST           Linux x86_64 · GNU Fortran (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 · Python 3.12.3
-RUN            GitHub Actions run 294 (schedule)
+RUN            GitHub Actions run 295 (schedule)
 
-STEP FETCH      RC=0004   49.05s  timeout 1200 python3 -u fetch_wx.py
-    CASCADIA-WX FETCH  2026-11-16 23:46 UTC  (Pacific date 2026-11-16)
+STEP FETCH      RC=0000   20.44s  timeout 1200 python3 -u fetch_wx.py
+    CASCADIA-WX FETCH  2026-11-17 11:57 UTC  (Pacific date 2026-11-17)
     NRCS SNOTEL
-      679:WA:SNTL  Paradise         FAILED (HTTP Error 502: Bad Gateway); kept 411 days from the last run, last 2026-11-15
-      1085:WA:SNTL Cayuse Pass      FAILED (HTTP Error 502: Bad Gateway); kept 411 days from the last run, last 2026-11-15
-      942:WA:SNTL  Burnt Mountain   FAILED (HTTP Error 502: Bad Gateway); kept 411 days from the last run, last 2026-11-15
-      418:WA:SNTL  Corral Pass      FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      943:WA:SNTL  Dungeness        FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      1107:WA:SNTL Buckinghorse     FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      974:WA:SNTL  Waterhole        FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      672:WA:SNTL  Olallie Meadows  FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      791:WA:SNTL  Stevens Pass     FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      788:WA:SNTL  Stampede Pass    FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      910:WA:SNTL  Elbow Lake       FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      375:WA:SNTL  Bumping Ridge    FAILED (skipped, NRCS not answering); kept 411 days from the last run, last 2026-11-15
-      wrote 4932 station-days to snotel_daily.csv
+      679:WA:SNTL  Paradise          412 days, last 2026-11-16
+      1085:WA:SNTL Cayuse Pass       412 days, last 2026-11-16
+      942:WA:SNTL  Burnt Mountain    412 days, last 2026-11-16
+      418:WA:SNTL  Corral Pass       412 days, last 2026-11-16
+      943:WA:SNTL  Dungeness         412 days, last 2026-11-16
+      1107:WA:SNTL Buckinghorse      412 days, last 2026-11-16
+      974:WA:SNTL  Waterhole         412 days, last 2026-11-16
+      672:WA:SNTL  Olallie Meadows   412 days, last 2026-11-16
+      791:WA:SNTL  Stevens Pass      412 days, last 2026-11-16
+      788:WA:SNTL  Stampede Pass     411 days, last 2026-11-15
+      910:WA:SNTL  Elbow Lake        412 days, last 2026-11-16
+      375:WA:SNTL  Bumping Ridge     412 days, last 2026-11-16
+      wrote 4943 station-days to snotel_daily.csv
     NWS radiosondes
-      KUIL  Quillayute    16 soundings since 2026-11-06 23Z, latest 2026111612
-      KSLE  Salem         20 soundings since 2026-11-06 23Z, latest 2026111612
-      KMFR  Medford       19 soundings since 2026-11-06 23Z, latest 2026111612
-      KOTX  Spokane       20 soundings since 2026-11-06 23Z, latest 2026111612
+      KUIL  Quillayute    16 soundings since 2026-11-07 11Z, latest 2026111700
+      KSLE  Salem         20 soundings since 2026-11-07 11Z, latest 2026111700
+      KMFR  Medford       19 soundings since 2026-11-07 11Z, latest 2026111700
+      KOTX  Spokane       20 soundings since 2026-11-07 11Z, latest 2026111700
 
-STEP COMPILE    RC=0000    3.35s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
+STEP COMPILE    RC=0000    3.52s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
 
 STEP NORMALS    skipped: normals.csv is current (see normals-log.txt)
 
-STEP CASCADWX   RC=0000    0.23s  timeout 300 ./cascadia-wx
-    CWX000I CASCADIA-WX V3.0 STARTED 2026-11-16 23:46:52
+STEP CASCADWX   RC=0004    0.17s  timeout 300 ./cascadia-wx
+    CWX000I CASCADIA-WX V3.0 STARTED 2026-11-17 11:57:27
     CWX001I BALLOON SITES ..............     4
     CWX002I NORMALS LOADED (SITE-DAYS) .  1464
     CWX004I SOUNDINGS READ .............    75
-    CWX005I SOUNDINGS ON FILE ..........  3214
-    CWX003I SNOTEL STATION-DAYS .........  4932
+    CWX005I SOUNDINGS ON FILE ..........  3218
+    CWX003I SNOTEL STATION-DAYS .........  4943
     CWX006I REPORT WRITTEN: cascadia-wx-report.txt
     CWX007I RESULTS WRITTEN: air.csv upper_air.csv sounding_series.csv summary.csv
-    CWX999I CASCADIA-WX V3.0 ENDED  RC= 0
+    CWX013W Stampede Pass: LAST DATA 2026-11-15
+    CWX999I CASCADIA-WX V3.0 ENDED  RC= 4
 
-JOB CASCADWX   ENDED  MAXCC=0004  52.7s
+JOB CASCADWX   ENDED  MAXCC=0004  24.1s
