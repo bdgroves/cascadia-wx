@@ -1,5 +1,5 @@
 massif,stations,swe_in,swe_median_in,swe_pct,class,wy_precip_in,wy_precip_median_in,wy_precip_pct,last_wy_peak_sum_in,last_wy_median_peak_sum_in,last_wy_peak_pct
-RAINIER,4,0.7,10.5,7,UNDER 50%,19.4,42.5,46,111.5,200.8,56
-OLYMPICS,3,1.1,5.7,19,UNDER 50%,35.3,46.9,75,51.8,112.2,46
-CASCADES,5,0.3,5.9,5,UNDER 50%,28.4,67.8,42,98.7,194.6,51
-ALL,12,2.1,22.1,10,UNDER 50%,83.1,157.2,53,262.0,507.6,52
+RAINIER,4,1.3,12.2,11,UNDER 50%,19.8,42.6,46,111.5,200.8,56
+OLYMPICS,3,2.0,6.2,32,UNDER 50%,36.1,49.6,73,51.8,112.2,46
+CASCADES,4,0.4,5.9,7,UNDER 50%,22.2,56.2,40,98.7,194.6,51
+ALL,11,3.7,24.3,15,UNDER 50%,78.1,148.4,53,262.0,507.6,52
