@@ -1,5 +1,5 @@
 ====================================================================================================================================
-CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-11-24 13:48 UTC
+CASCADIA-WX V3.0                     PACIFIC NORTHWEST UPPER AIR AND SNOWPACK                             RUN 2026-11-24 23:56 UTC
                                      QUILLAYUTE - SALEM - MEDFORD - SPOKANE   RAINIER - OLYMPICS - CASCADES
 WATER YEAR 2027                                                    NORMALS: 1991-2020 (BALLOONS AND NRCS)
 ====================================================================================================================================
@@ -68,7 +68,7 @@ SECTION VI   SNOWPACK    NRCS SNOTEL, 12 STATIONS, AGAINST NRCS 1991-2020 MEDIAN
 STATION          MASSIF     ELEV    SWE  MEDIAN   %MED  7-DAY   DEPTH   WY PRECIP  MEDIAN   %MED   TAVG  STATUS
 ------------------------------------------------------------------------------------------------------------------------------------
 Paradise         RAINIER    5150     0.9     7.2     13    0.9       6       10.1    24.0     42   -0.7  OK
-Cayuse Pass      RAINIER    5260     0.8     4.2     19    0.6      --         --      --     --   -1.9  OK
+Cayuse Pass      RAINIER    5260     0.8     4.2     19    0.6       2         --    16.2     --   -1.9  OK
 Burnt Mountain   RAINIER    4160     0.2     1.0     20    0.2       0        6.4    16.0     40    2.3  OK
 Corral Pass      RAINIER    5810     1.1     4.0     28    0.6       6        4.5    11.7     38   -3.2  OK
 Dungeness        OLYMPICS   3990     1.1     0.6     --    1.1       4        8.7    11.1     78    1.8  OK
