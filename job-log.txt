@@ -1,42 +1,42 @@
-JOB CASCADWX   2026-11-24 02:18:12 UTC
+JOB CASCADWX   2026-11-24 13:48:35 UTC
 HOST           Linux x86_64 · GNU Fortran (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 · Python 3.12.3
-RUN            GitHub Actions run 308 (schedule)
+RUN            GitHub Actions run 309 (schedule)
 
-STEP FETCH      RC=0000   32.25s  timeout 1200 python3 -u fetch_wx.py
-    CASCADIA-WX FETCH  2026-11-24 02:18 UTC  (Pacific date 2026-11-23)
+STEP FETCH      RC=0000   18.78s  timeout 1200 python3 -u fetch_wx.py
+    CASCADIA-WX FETCH  2026-11-24 13:48 UTC  (Pacific date 2026-11-24)
     NRCS SNOTEL
-      679:WA:SNTL  Paradise          418 days, last 2026-11-22
-      1085:WA:SNTL Cayuse Pass       418 days, last 2026-11-22
-      942:WA:SNTL  Burnt Mountain    418 days, last 2026-11-22
-      418:WA:SNTL  Corral Pass       418 days, last 2026-11-22
-      943:WA:SNTL  Dungeness         418 days, last 2026-11-22
-      1107:WA:SNTL Buckinghorse      418 days, last 2026-11-22
-      974:WA:SNTL  Waterhole         418 days, last 2026-11-22
-      672:WA:SNTL  Olallie Meadows   418 days, last 2026-11-22
-      791:WA:SNTL  Stevens Pass      418 days, last 2026-11-22
-      788:WA:SNTL  Stampede Pass     418 days, last 2026-11-22
-      910:WA:SNTL  Elbow Lake        418 days, last 2026-11-22
-      375:WA:SNTL  Bumping Ridge     418 days, last 2026-11-22
-      wrote 5016 station-days to snotel_daily.csv
+      679:WA:SNTL  Paradise          419 days, last 2026-11-23
+      1085:WA:SNTL Cayuse Pass       419 days, last 2026-11-23
+      942:WA:SNTL  Burnt Mountain    419 days, last 2026-11-23
+      418:WA:SNTL  Corral Pass       419 days, last 2026-11-23
+      943:WA:SNTL  Dungeness         419 days, last 2026-11-23
+      1107:WA:SNTL Buckinghorse      419 days, last 2026-11-23
+      974:WA:SNTL  Waterhole         419 days, last 2026-11-23
+      672:WA:SNTL  Olallie Meadows   419 days, last 2026-11-23
+      791:WA:SNTL  Stevens Pass      419 days, last 2026-11-23
+      788:WA:SNTL  Stampede Pass     419 days, last 2026-11-23
+      910:WA:SNTL  Elbow Lake        419 days, last 2026-11-23
+      375:WA:SNTL  Bumping Ridge     419 days, last 2026-11-23
+      wrote 5028 station-days to snotel_daily.csv
     NWS radiosondes
-      KUIL  Quillayute    20 soundings since 2026-11-14 02Z, latest 2026112400
-      KSLE  Salem         19 soundings since 2026-11-14 02Z, latest 2026112400
-      KMFR  Medford       19 soundings since 2026-11-14 02Z, latest 2026112400
-      KOTX  Spokane       19 soundings since 2026-11-14 02Z, latest 2026112400
+      KUIL  Quillayute    20 soundings since 2026-11-14 13Z, latest 2026112412
+      KSLE  Salem         19 soundings since 2026-11-14 13Z, latest 2026112412
+      KMFR  Medford       19 soundings since 2026-11-14 13Z, latest 2026112412
+      KOTX  Spokane       19 soundings since 2026-11-14 13Z, latest 2026112412
 
-STEP COMPILE    RC=0000    3.71s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
+STEP COMPILE    RC=0000    2.99s  gfortran -O2 -o cascadia-wx CWX_PHYS.f90 CASCADIA-WX.f90
 
 STEP NORMALS    skipped: normals.csv is current (see normals-log.txt)
 
-STEP CASCADWX   RC=0000    0.19s  timeout 300 ./cascadia-wx
-    CWX000I CASCADIA-WX V3.0 STARTED 2026-11-24 02:18:48
+STEP CASCADWX   RC=0000    0.14s  timeout 300 ./cascadia-wx
+    CWX000I CASCADIA-WX V3.0 STARTED 2026-11-24 13:48:57
     CWX001I BALLOON SITES ..............     4
     CWX002I NORMALS LOADED (SITE-DAYS) .  1464
     CWX004I SOUNDINGS READ .............    77
-    CWX005I SOUNDINGS ON FILE ..........  3272
-    CWX003I SNOTEL STATION-DAYS .........  5016
+    CWX005I SOUNDINGS ON FILE ..........  3276
+    CWX003I SNOTEL STATION-DAYS .........  5028
     CWX006I REPORT WRITTEN: cascadia-wx-report.txt
     CWX007I RESULTS WRITTEN: air.csv upper_air.csv sounding_series.csv summary.csv
     CWX999I CASCADIA-WX V3.0 ENDED  RC= 0
 
-JOB CASCADWX   ENDED  MAXCC=0000  36.2s
+JOB CASCADWX   ENDED  MAXCC=0000  21.9s
